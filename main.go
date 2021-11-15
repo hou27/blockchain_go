@@ -2,24 +2,39 @@ package main
 
 import (
 	"crypto/sha256"
+	"errors"
 	"fmt"
 	"time"
+
+	"github.com/go-playground/validator"
 )
 
 type block struct {
-	index			int
-	hash			string
-    previousHash	string
-	data			string
-    timeStamp		time.Time
+	index			int `validate:"min=0,max=100"`
+	hash			string `validate:"required"`
+	previousHash	string `validate:"required"`
+	data			string `validate:"required"`
+	timeStamp		time.Time `validate:"required"`
 }
 
 type blockchain struct {
 	blocks []block
 }
 
-func (b *blockchain) validateStructure() bool {
-	return true
+var errNotValid = errors.New("Can't add this block")
+
+func (b *blockchain) validateStructure(newBlock block) error {
+	fmt.Println(newBlock)
+	validate := validator.New()
+
+	err := validate.Struct(newBlock)
+	if err != nil {
+		for _, err := range err.(validator.ValidationErrors) {
+			fmt.Println(err)
+		}
+		return errNotValid
+	}
+	return nil
 }
 
 func (b *blockchain) getPrevHash() string {
@@ -41,7 +56,14 @@ func (b *blockchain) addBlock(data string) {
 	newBlock := block{index, "", b.getPrevHash(), data, time.Now()}
 	hash := sha256.Sum256([]byte(newBlock.data + newBlock.previousHash)) // func sha256.Sum256(data []byte) [32]byte
 	newBlock.hash = fmt.Sprintf("%x", hash)
-	b.blocks = append(b.blocks, newBlock)
+
+	isValidated := b.validateStructure(newBlock)
+
+	if isValidated != nil {
+		fmt.Println(isValidated)
+	} else {
+		b.blocks = append(b.blocks, newBlock)
+	}
 }
 
 func (b *blockchain) showBlocks() {
