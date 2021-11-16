@@ -10,22 +10,22 @@ import (
 	"github.com/go-playground/validator"
 )
 
-type block struct {
-	timeStamp		int64 `validate:"required"`
-	hash			string `validate:"required"`
-	prevHash		string `validate:"required"`
-	data			string `validate:"required"`
+type Block struct {
+	TimeStamp		int64 `validate:"required"`
+	Hash			string `validate:"required"`
+	PrevHash		string `validate:"required"`
+	Data			string `validate:"required"`
 }
 
-type blockchain struct {
-	blocks []*block
+type Blockchain struct {
+	blocks []*Block
 }
 
-var bc *blockchain
+var bc *Blockchain
 var once sync.Once
 var errNotValid = errors.New("Can't add this block")
 
-func (bc *blockchain) validateStructure(newBlock block) error {
+func (bc *Blockchain) validateStructure(newBlock Block) error {
 	fmt.Println(newBlock)
 	validate := validator.New()
 
@@ -41,39 +41,39 @@ func (bc *blockchain) validateStructure(newBlock block) error {
 
 func generateGenesis() {
 	once.Do(func() {
-		bc = &blockchain{}
+		bc = &Blockchain{}
 		bc.AddBlock("Genesis Block")
 	})
 }
 
 // Get All Blockchains
-func GetBlockchain() *blockchain {
+func GetBlockchain() *Blockchain {
 	if bc == nil {
 		generateGenesis()
 	}
 	return bc
 }
 
-func (bc blockchain) getPrevHash() string {
+func (bc Blockchain) getPrevHash() string {
 	if len(GetBlockchain().blocks) > 0 {
-		return GetBlockchain().blocks[len(GetBlockchain().blocks)-1].hash
+		return GetBlockchain().blocks[len(GetBlockchain().blocks)-1].Hash
 	}
 	return "First Block"
 }
 
-func (b *block) calculateHash() {
-	hash := sha256.Sum256([]byte(b.data + b.prevHash)) // func sha256.Sum256(data []byte) [32]byte
-	b.hash = fmt.Sprintf("%x", hash)
+func (b *Block) calculateHash() {
+	hash := sha256.Sum256([]byte(b.Data + b.PrevHash)) // func sha256.Sum256(data []byte) [32]byte
+	b.Hash = fmt.Sprintf("%x", hash)
 }
 
-func NewBlock(data string, prevHash string) *block {
-	newblock := &block{time.Now().Unix(), "", prevHash, data}
+func NewBlock(data string, prevHash string) *Block {
+	newblock := &Block{time.Now().Unix(), "", prevHash, data}
 	newblock.calculateHash()
 	return newblock
 }
 
 // Add Blockchain
-func (bc *blockchain) AddBlock(data string) {
+func (bc *Blockchain) AddBlock(data string) {
 	prevHash := bc.getPrevHash()
 	newBlock := NewBlock(data, prevHash)
 
@@ -87,11 +87,11 @@ func (bc *blockchain) AddBlock(data string) {
 }
 
 // Show Blockchains
-func (bc blockchain) ShowBlocks() {
+func (bc Blockchain) ShowBlocks() {
 	for _, block := range GetBlockchain().blocks {
-		fmt.Println("TimeStamp: ", block.timeStamp)
-		fmt.Printf("Data: %s\n", block.data)
-		fmt.Printf("Hash: %s\n", block.hash)
-		fmt.Printf("Prev Hash: %s\n", block.prevHash)
+		fmt.Println("TimeStamp: ", block.TimeStamp)
+		fmt.Printf("Data: %s\n", block.Data)
+		fmt.Printf("Hash: %s\n", block.Hash)
+		fmt.Printf("Prev Hash: %s\n", block.PrevHash)
 	}
 }
