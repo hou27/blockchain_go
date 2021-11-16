@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/go-playground/validator"
@@ -18,12 +19,14 @@ type block struct {
 }
 
 type blockchain struct {
-	blocks []block
+	blocks []*block
 }
 
+var bc *blockchain
+var once sync.Once
 var errNotValid = errors.New("Can't add this block")
 
-func (b *blockchain) validateStructure(newBlock block) error {
+func (bc *blockchain) validateStructure(newBlock block) error {
 	fmt.Println(newBlock)
 	validate := validator.New()
 
@@ -37,37 +40,50 @@ func (b *blockchain) validateStructure(newBlock block) error {
 	return nil
 }
 
-func (b *blockchain) getPrevHash() string {
-	if len(b.blocks) > 0 {
-		return b.blocks[len(b.blocks)-1].hash
+func (bc *blockchain) generateGenesis() {
+	once.Do(func() {
+        bc.addBlock("Genesis Block")
+    })
+}
+
+func (bc *blockchain) getblockchain() *blockchain {
+	if bc == nil {
+		bc.generateGenesis()
+	}
+	return bc
+}
+
+func (bc *blockchain) getPrevHash() string {
+	if len(bc.blocks) > 0 {
+		return bc.blocks[len(bc.blocks)-1].hash
 	}
 	return "First Block"
 }
 
-func (b *blockchain) getIndex() int {
-	if len(b.blocks) > 0 {
-		return b.blocks[len(b.blocks)-1].index + 1
+func (bc *blockchain) getIndex() int {
+	if len(bc.blocks) > 0 {
+		return bc.blocks[len(bc.blocks)-1].index + 1
 	}
 	return 0
 }
 
-func (b *blockchain) addBlock(data string) {
-	index := b.getIndex()
-	newBlock := block{index, "", b.getPrevHash(), data, time.Now()}
+func (bc *blockchain) addBlock(data string) {
+	index := bc.getIndex()
+	newBlock := &block{index, "", bc.getPrevHash(), data, time.Now()}
 	hash := sha256.Sum256([]byte(newBlock.data + newBlock.previousHash)) // func sha256.Sum256(data []byte) [32]byte
 	newBlock.hash = fmt.Sprintf("%x", hash)
 
-	isValidated := b.validateStructure(newBlock)
+	isValidated := bc.validateStructure(*newBlock)
 
 	if isValidated != nil {
 		fmt.Println(isValidated)
 	} else {
-		b.blocks = append(b.blocks, newBlock)
+		bc.blocks = append(bc.blocks, newBlock)
 	}
 }
 
-func (b *blockchain) showBlocks() {
-	for _, block := range b.blocks {
+func (bc *blockchain) showBlocks() {
+	for _, block := range bc.blocks {
 		bT := block.timeStamp.Format("Mon Jan _2 15:04:05 2006")
 		fmt.Printf("Index: %d\n", block.index)
 		fmt.Printf("Data: %s\n", block.data)
@@ -78,7 +94,7 @@ func (b *blockchain) showBlocks() {
 }
 
 func main() {
-	chain := blockchain{}
+	chain := &blockchain{}
 	chain.addBlock("Genesis Block")
 	chain.addBlock("Second Block")
 	chain.addBlock("Third Block")
