@@ -41,28 +41,35 @@ func (bc *blockchain) validateStructure(newBlock block) error {
 }
 
 func (bc *blockchain) generateGenesis() {
-	once.Do(func() {
-        bc.addBlock("Genesis Block")
-    })
+	
 }
 
-func (bc *blockchain) getblockchain() *blockchain {
+func getBlockchain() *blockchain {
+	fmt.Println("getbc")
+	fmt.Println(bc)
 	if bc == nil {
-		bc.generateGenesis()
+		
+		// bc.generateGenesis()
+		once.Do(func() {
+			bc = &blockchain{}
+			fmt.Println("genesis")
+			bc.addBlock("Genesis Block")
+		})
+		fmt.Println("check")
 	}
 	return bc
 }
 
-func (bc *blockchain) getPrevHash() string {
-	if len(bc.blocks) > 0 {
-		return bc.blocks[len(bc.blocks)-1].hash
+func (bc blockchain) getPrevHash() string {
+	if len(getBlockchain().blocks) > 0 {
+		return getBlockchain().blocks[len(getBlockchain().blocks)-1].hash
 	}
 	return "First Block"
 }
 
-func (bc *blockchain) getIndex() int {
-	if len(bc.blocks) > 0 {
-		return bc.blocks[len(bc.blocks)-1].index + 1
+func (bc blockchain) getIndex() int {
+	if len(getBlockchain().blocks) > 0 {
+		return getBlockchain().blocks[len(getBlockchain().blocks)-1].index + 1
 	}
 	return 0
 }
@@ -78,12 +85,12 @@ func (bc *blockchain) addBlock(data string) {
 	if isValidated != nil {
 		fmt.Println(isValidated)
 	} else {
-		bc.blocks = append(bc.blocks, newBlock)
+		bc.blocks = append(getBlockchain().blocks, newBlock)
 	}
 }
 
-func (bc *blockchain) showBlocks() {
-	for _, block := range bc.blocks {
+func (bc blockchain) showBlocks() {
+	for _, block := range getBlockchain().blocks {
 		bT := block.timeStamp.Format("Mon Jan _2 15:04:05 2006")
 		fmt.Printf("Index: %d\n", block.index)
 		fmt.Printf("Data: %s\n", block.data)
@@ -94,8 +101,9 @@ func (bc *blockchain) showBlocks() {
 }
 
 func main() {
-	chain := &blockchain{}
-	chain.addBlock("Genesis Block")
+	chain := getBlockchain()
+	fmt.Println(chain)
+	chain.addBlock("Genesis Block?")
 	chain.addBlock("Second Block")
 	chain.addBlock("Third Block")
 	chain.showBlocks()
