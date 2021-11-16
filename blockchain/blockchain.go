@@ -69,12 +69,16 @@ func (bc blockchain) getIndex() int {
 	return 0
 }
 
+func (bc *blockchain) calculateHash(newBlock *block) {
+	hash := sha256.Sum256([]byte(newBlock.data + newBlock.previousHash)) // func sha256.Sum256(data []byte) [32]byte
+	newBlock.hash = fmt.Sprintf("%x", hash)
+}
+
 // Add Blockchain
 func (bc *blockchain) AddBlock(data string) {
 	index := bc.getIndex()
 	newBlock := &block{index, "", bc.getPrevHash(), data, time.Now()}
-	hash := sha256.Sum256([]byte(newBlock.data + newBlock.previousHash)) // func sha256.Sum256(data []byte) [32]byte
-	newBlock.hash = fmt.Sprintf("%x", hash)
+	bc.calculateHash(newBlock)
 
 	isValidated := bc.validateStructure(*newBlock)
 
