@@ -40,22 +40,16 @@ func (bc *blockchain) validateStructure(newBlock block) error {
 	return nil
 }
 
-func (bc *blockchain) generateGenesis() {
-	
+func generateGenesis() {
+	once.Do(func() {
+		bc = &blockchain{}
+		bc.addBlock("Genesis Block")
+	})
 }
 
 func getBlockchain() *blockchain {
-	fmt.Println("getbc")
-	fmt.Println(bc)
 	if bc == nil {
-		
-		// bc.generateGenesis()
-		once.Do(func() {
-			bc = &blockchain{}
-			fmt.Println("genesis")
-			bc.addBlock("Genesis Block")
-		})
-		fmt.Println("check")
+		generateGenesis()
 	}
 	return bc
 }
@@ -102,7 +96,6 @@ func (bc blockchain) showBlocks() {
 
 func main() {
 	chain := getBlockchain()
-	fmt.Println(chain)
 	chain.addBlock("Genesis Block?")
 	chain.addBlock("Second Block")
 	chain.addBlock("Third Block")
