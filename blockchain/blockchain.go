@@ -11,11 +11,10 @@ import (
 )
 
 type block struct {
-	index			int `validate:"min=0,max=100"`
+	timeStamp		int64 `validate:"required"`
 	hash			string `validate:"required"`
-	previousHash	string `validate:"required"`
+	prevHash		string `validate:"required"`
 	data			string `validate:"required"`
-	timeStamp		time.Time `validate:"required"`
 }
 
 type blockchain struct {
@@ -62,23 +61,21 @@ func (bc blockchain) getPrevHash() string {
 	return "First Block"
 }
 
-func (bc blockchain) getIndex() int {
-	if len(GetBlockchain().blocks) > 0 {
-		return GetBlockchain().blocks[len(GetBlockchain().blocks)-1].index + 1
-	}
-	return 0
+func (b *block) calculateHash() {
+	hash := sha256.Sum256([]byte(b.data + b.prevHash)) // func sha256.Sum256(data []byte) [32]byte
+	b.hash = fmt.Sprintf("%x", hash)
 }
 
-func (bc *blockchain) calculateHash(newBlock *block) {
-	hash := sha256.Sum256([]byte(newBlock.data + newBlock.previousHash)) // func sha256.Sum256(data []byte) [32]byte
-	newBlock.hash = fmt.Sprintf("%x", hash)
+func NewBlock(data string, prevHash string) *block {
+	newblock := &block{time.Now().Unix(), "", prevHash, data}
+	newblock.calculateHash()
+	return newblock
 }
 
 // Add Blockchain
 func (bc *blockchain) AddBlock(data string) {
-	index := bc.getIndex()
-	newBlock := &block{index, "", bc.getPrevHash(), data, time.Now()}
-	bc.calculateHash(newBlock)
+	prevHash := bc.getPrevHash()
+	newBlock := NewBlock(data, prevHash)
 
 	isValidated := bc.validateStructure(*newBlock)
 
@@ -92,11 +89,9 @@ func (bc *blockchain) AddBlock(data string) {
 // Show Blockchains
 func (bc blockchain) ShowBlocks() {
 	for _, block := range GetBlockchain().blocks {
-		bT := block.timeStamp.Format("Mon Jan _2 15:04:05 2006")
-		fmt.Printf("Index: %d\n", block.index)
+		fmt.Println("TimeStamp: ", block.timeStamp)
 		fmt.Printf("Data: %s\n", block.data)
 		fmt.Printf("Hash: %s\n", block.hash)
-		fmt.Printf("Prev Hash: %s\n", block.previousHash)
-		fmt.Println("TimeStamp: ", bT)
+		fmt.Printf("Prev Hash: %s\n", block.prevHash)
 	}
 }
