@@ -15,14 +15,14 @@ type Block struct {
 	Hash		[]byte `validate:"required"`
 	PrevHash	[]byte `validate:"required"`
 	Data		[]byte `validate:"required"`
-	Nonce		int `validate:"required"`
+	Nonce		int `validate:"min=0"`
 }
 
 type Blockchain struct {
 	blocks []*Block
 }
 
-var bc *Blockchain
+var Bc *Blockchain
 var once sync.Once
 var errNotValid = errors.New("Can't add this block")
 
@@ -41,17 +41,17 @@ func (bc *Blockchain) validateStructure(newBlock Block) error {
 
 func generateGenesis() {
 	once.Do(func() {
-		bc = &Blockchain{}
-		bc.AddBlock("Genesis Block")
+		Bc = &Blockchain{}
+		Bc.AddBlock("Genesis Block")
 	})
 }
 
 // Get All Blockchains
 func GetBlockchain() *Blockchain {
-	if bc == nil {
+	if Bc == nil {
 		generateGenesis()
 	}
-	return bc
+	return Bc
 }
 
 func (bc Blockchain) getPrevHash() []byte {
@@ -83,11 +83,12 @@ func (bc *Blockchain) AddBlock(data string) {
 			fmt.Println(isValidated)
 		} else {
 			bc.blocks = append(GetBlockchain().blocks, newBlock)
+			fmt.Println("Added")
 		}
+	} else {
+		bc.blocks = append(GetBlockchain().blocks, newBlock)
+		fmt.Println("Added")
 	}
-
-	bc.blocks = append(bc.blocks, newBlock)
-	fmt.Println("Added")
 }
 
 // Show Blockchains
@@ -98,6 +99,7 @@ func (bc Blockchain) ShowBlocks() {
 		fmt.Printf("Data: %s\n", block.Data)
         fmt.Printf("Hash: %x\n", block.Hash)
 		fmt.Printf("Prev Hash: %x\n", block.PrevHash)
+		fmt.Printf("Prev Hash: %d\n", block.Nonce)
 		fmt.Printf("is Validated: %s\n", strconv.FormatBool(pow.Validate()))
 	}
 }
