@@ -6,3 +6,5 @@ Making a Cryptocurrency with GO.
 ```
 go run .
 ```
+
+- persistence-and-cli
