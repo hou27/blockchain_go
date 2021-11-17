@@ -1,4 +1,4 @@
-package proofofwork
+package main
 
 import (
 	"bytes"
@@ -7,13 +7,10 @@ import (
 	"fmt"
 	"math"
 	"math/big"
-
-	"github.com/hou27/blockchain_go/blockchain"
 )
 
 const targetBits = 6
 const maxNonce = math.MaxInt64
-type Block blockchain.Block
 
 type ProofOfWork struct {
 	block *Block

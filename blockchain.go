@@ -1,4 +1,4 @@
-package blockchain
+package main
 
 import (
 	"errors"
@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/go-playground/validator"
-	"github.com/hou27/blockchain_go/proofofwork"
 )
 
 type Block struct {
@@ -70,7 +69,7 @@ func (bc Blockchain) getPrevHash() []byte {
 
 func NewBlock(data string, prevHash []byte) *Block {
 	newblock := &Block{int32(time.Now().Unix()), nil, prevHash, []byte(data), 0}
-	pow := proofofwork.NewProofOfWork(newblock)
+	pow := NewProofOfWork(newblock)
 	nonce, hash := pow.Run()
 
 	newblock.Hash = hash[:]
