@@ -1,20 +1,21 @@
 package blockchain
 
 import (
-	"crypto/sha256"
 	"errors"
 	"fmt"
 	"sync"
 	"time"
 
 	"github.com/go-playground/validator"
+	"github.com/hou27/blockchain_go/proofofwork"
 )
 
 type Block struct {
-	TimeStamp		int64 `validate:"required"`
-	Hash			string `validate:"required"`
-	PrevHash		string `validate:"required"`
-	Data			string `validate:"required"`
+	TimeStamp	int32 `validate:"required"`
+	Hash		[]byte `validate:"required"`
+	PrevHash	[]byte `validate:"required"`
+	Data		[]byte `validate:"required"`
+	Nonce		int
 }
 
 type Blockchain struct {
@@ -54,21 +55,26 @@ func GetBlockchain() *Blockchain {
 	return bc
 }
 
-func (bc Blockchain) getPrevHash() string {
+func (bc Blockchain) getPrevHash() []byte {
 	if len(GetBlockchain().blocks) > 0 {
 		return GetBlockchain().blocks[len(GetBlockchain().blocks)-1].Hash
 	}
-	return "First Block"
+	return nil
 }
 
-func (b *Block) calculateHash() {
-	hash := sha256.Sum256([]byte(b.Data + b.PrevHash)) // func sha256.Sum256(data []byte) [32]byte
-	b.Hash = fmt.Sprintf("%x", hash)
-}
+// func (b *Block) calculateHash() {
+// 	data := append(b.Data, b.PrevHash...)
+// 	hash := sha256.Sum256(data) // func sha256.Sum256(data []byte) [32]byte
+// 	b.Hash = hash[:]
+// }
 
-func NewBlock(data string, prevHash string) *Block {
-	newblock := &Block{time.Now().Unix(), "", prevHash, data}
-	newblock.calculateHash()
+func NewBlock(data string, prevHash []byte) *Block {
+	newblock := &Block{int32(time.Now().Unix()), nil, prevHash, []byte(data), 0}
+	pow := proofofwork.NewProofOfWork(newblock)
+	nonce, hash := pow.Run()
+
+	newblock.Hash = hash[:]
+	newblock.Nonce = nonce
 	return newblock
 }
 
