@@ -14,7 +14,7 @@ type Block struct {
 	Hash		[]byte `validate:"required"`
 	PrevHash	[]byte `validate:"required"`
 	Data		[]byte `validate:"required"`
-	Nonce		int
+	Nonce		int `validate:"required"`
 }
 
 type Blockchain struct {
@@ -26,7 +26,6 @@ var once sync.Once
 var errNotValid = errors.New("Can't add this block")
 
 func (bc *Blockchain) validateStructure(newBlock Block) error {
-	fmt.Println(newBlock)
 	validate := validator.New()
 
 	err := validate.Struct(newBlock)
@@ -82,21 +81,26 @@ func (bc *Blockchain) AddBlock(data string) {
 	prevHash := bc.getPrevHash()
 	newBlock := NewBlock(data, prevHash)
 
-	isValidated := bc.validateStructure(*newBlock)
-
-	if isValidated != nil {
-		fmt.Println(isValidated)
-	} else {
-		bc.blocks = append(GetBlockchain().blocks, newBlock)
+	if bc.blocks != nil {
+		isValidated := bc.validateStructure(*newBlock)
+		if isValidated != nil {
+			fmt.Println(isValidated)
+		} else {
+			bc.blocks = append(GetBlockchain().blocks, newBlock)
+		}
 	}
+
+	bc.blocks = append(bc.blocks, newBlock)
+	fmt.Println("Added")
 }
 
 // Show Blockchains
 func (bc Blockchain) ShowBlocks() {
 	for _, block := range GetBlockchain().blocks {
-		fmt.Println("TimeStamp: ", block.TimeStamp)
+		fmt.Println("TimeStamp:", block.TimeStamp)
 		fmt.Printf("Data: %s\n", block.Data)
-		fmt.Printf("Hash: %s\n", block.Hash)
-		fmt.Printf("Prev Hash: %s\n", block.PrevHash)
+        fmt.Printf("Hash: %x\n", block.Hash)
+		fmt.Printf("Prev Hash: %x\n", block.PrevHash)
 	}
+	fmt.Println("end of Show")
 }
