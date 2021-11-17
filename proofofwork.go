@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"crypto/sha256"
-	"encoding/binary"
 	"fmt"
 	"math"
 	"math/big"
@@ -17,14 +16,9 @@ type ProofOfWork struct {
 	target *big.Int
 }
 
-// IntToHex converts an int64 to a byte array
-func IntToHex(num int64) []byte {
-	bs := make([]byte, 8)
-    binary.LittleEndian.PutUint64(bs, uint64(num))
 
-	return bs
-}
 
+// Build a new ProofOfWork and return
 func NewProofOfWork(b *Block) *ProofOfWork {
 	target := big.NewInt(1)
 	target.Lsh(target, uint(256-targetBits))
@@ -47,6 +41,7 @@ func (pow *ProofOfWork) prepareData(nonce int) []byte {
 	return data
 }
 
+// Mining
 func (pow *ProofOfWork) Run() (int, []byte) {
 	var hashInt big.Int
 	var hash [32]byte
@@ -64,4 +59,17 @@ func (pow *ProofOfWork) Run() (int, []byte) {
 		}
 	}
 	return nonce, hash[:]
+}
+
+// Validate hash
+func (pow *ProofOfWork) Validate() bool {
+	var hashInt big.Int
+
+	hash := sha256.Sum256(
+		pow.prepareData(pow.block.Nonce),
+	)
+	hashInt.SetBytes(hash[:])
+
+	isValid := hashInt.Cmp(pow.target) == -1
+	return isValid
 }

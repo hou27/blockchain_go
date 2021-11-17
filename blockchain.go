@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"sync"
 	"time"
 
@@ -60,12 +61,7 @@ func (bc Blockchain) getPrevHash() []byte {
 	return nil
 }
 
-// func (b *Block) calculateHash() {
-// 	data := append(b.Data, b.PrevHash...)
-// 	hash := sha256.Sum256(data) // func sha256.Sum256(data []byte) [32]byte
-// 	b.Hash = hash[:]
-// }
-
+// Prepare new block
 func NewBlock(data string, prevHash []byte) *Block {
 	newblock := &Block{int32(time.Now().Unix()), nil, prevHash, []byte(data), 0}
 	pow := NewProofOfWork(newblock)
@@ -97,10 +93,11 @@ func (bc *Blockchain) AddBlock(data string) {
 // Show Blockchains
 func (bc Blockchain) ShowBlocks() {
 	for _, block := range GetBlockchain().blocks {
+		pow := NewProofOfWork(block)
 		fmt.Println("TimeStamp:", block.TimeStamp)
 		fmt.Printf("Data: %s\n", block.Data)
         fmt.Printf("Hash: %x\n", block.Hash)
 		fmt.Printf("Prev Hash: %x\n", block.PrevHash)
+		fmt.Printf("is Validated: %s\n", strconv.FormatBool(pow.Validate()))
 	}
-	fmt.Println("end of Show")
 }
