@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/boltdb/bolt"
 	"github.com/go-playground/validator"
 )
 
@@ -51,6 +52,11 @@ func generateGenesis() {
 
 // Get All Blockchains
 func GetBlockchain() *Blockchain {
+	db, err := bolt.Open("my.db", 0600, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
 	if Bc == nil {
 		generateGenesis()
 	}
