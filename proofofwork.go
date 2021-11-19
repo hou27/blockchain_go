@@ -18,7 +18,7 @@ type ProofOfWork struct {
 
 // Build a new ProofOfWork and return
 func NewProofOfWork(b *Block) *ProofOfWork {
-	targetBits += len(Bc.blocks)
+	// targetBits += len(Bc.blocks)
 	target := big.NewInt(1)
 	target.Lsh(target, uint(256-targetBits))
 	pow := &ProofOfWork{b, target}

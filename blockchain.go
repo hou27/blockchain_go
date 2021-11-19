@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"strconv"
 	"sync"
 	"time"
 
@@ -23,7 +22,7 @@ type Block struct {
 }
 
 type Blockchain struct {
-	blocks	[]*Block
+	db		*bolt.DB
 	last	[]byte
 }
 
@@ -46,15 +45,19 @@ func (bc *Blockchain) validateStructure(newBlock Block) error {
 	return nil
 }
 
-func generateGenesis() {
+func generateGenesis() *Block {
 	once.Do(func() {
 		Bc = &Blockchain{}
 		Bc.AddBlock("Genesis Block")
 	})
+
+	return NewBlock("Genesis Block", []byte{})
 }
 
 // Get All Blockchains
 func GetBlockchain() *Blockchain {
+	var last []byte
+
 	dbFile := fmt.Sprintf(dbFile, "0600")
 	db, err := bolt.Open(dbFile, 0600, nil)
 	if err != nil {
@@ -62,21 +65,35 @@ func GetBlockchain() *Blockchain {
 	}
 	defer db.Close()
 	err = db.Update(func(tx *bolt.Tx) error {
-		
+		bc := tx.Bucket([]byte("blocks"))
+		if bc == nil {
+			genesis := generateGenesis()
+			b, err := tx.CreateBucket([]byte("blocks"))
+			err = b.Put(genesis.Hash, genesis.Serialize())
+			err = b.Put([]byte("last"), genesis.Hash)
+			if err != nil {
+				log.Fatal(err)
+			}
+			last = genesis.Hash
+		} else {
+			last = bc.Get([]byte("last"))
+		}
 		return nil
 	})
-	if Bc == nil {
-		generateGenesis()
+	if err != nil {
+		log.Fatal(err)
 	}
-	return Bc
+
+	bc := Blockchain{db, last}
+    return &bc
 }
 
-func (bc Blockchain) getPrevHash() []byte {
-	if len(GetBlockchain().blocks) > 0 {
-		return GetBlockchain().blocks[len(GetBlockchain().blocks)-1].Hash
-	}
-	return nil
-}
+// func (bc Blockchain) getPrevHash() []byte {
+// 	if len(GetBlockchain().blocks) > 0 {
+// 		return GetBlockchain().blocks[len(GetBlockchain().blocks)-1].Hash
+// 	}
+// 	return nil
+// }
 
 // Prepare new block
 func NewBlock(data string, prevHash []byte) *Block {
@@ -88,37 +105,67 @@ func NewBlock(data string, prevHash []byte) *Block {
 	newblock.Nonce = nonce
 	return newblock
 }
-
+// add to boltDB
 // Add Blockchain
 func (bc *Blockchain) AddBlock(data string) {
-	prevHash := bc.getPrevHash()
-	newBlock := NewBlock(data, prevHash)
+	var lastHash []byte
 
-	if bc.blocks != nil {
-		isValidated := bc.validateStructure(*newBlock)
-		if isValidated != nil {
-			fmt.Println(isValidated)
-		} else {
-			bc.blocks = append(GetBlockchain().blocks, newBlock)
-			fmt.Println("Added")
-		}
-	} else {
-		bc.blocks = append(GetBlockchain().blocks, newBlock)
-		fmt.Println("Added")
+	err := bc.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte("blocks"))
+		lastHash = b.Get([]byte("last"))
+
+		return nil
+	})
+	if err != nil {
+		log.Panic(err)
 	}
+
+	newBlock := NewBlock(data, lastHash)
+
+	err = bc.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte("blocks"))
+		err := b.Put(newBlock.Hash, newBlock.Serialize())
+		if err != nil {
+			log.Panic(err)
+		}
+
+		err = b.Put([]byte("l"), newBlock.Hash)
+		if err != nil {
+			log.Panic(err)
+		}
+
+		bc.last = newBlock.Hash
+
+		return nil
+	})
+	// prevHash := bc.getPrevHash()
+	// newBlock := NewBlock(data, prevHash)
+
+	// if bc.blocks != nil {
+	// 	isValidated := bc.validateStructure(*newBlock)
+	// 	if isValidated != nil {
+	// 		fmt.Println(isValidated)
+	// 	} else {
+	// 		bc.blocks = append(GetBlockchain().blocks, newBlock)
+	// 		fmt.Println("Added")
+	// 	}
+	// } else {
+	// 	bc.blocks = append(GetBlockchain().blocks, newBlock)
+	// 	fmt.Println("Added")
+	// }
 }
 
 // Show Blockchains
 func (bc Blockchain) ShowBlocks() {
-	for _, block := range GetBlockchain().blocks {
-		pow := NewProofOfWork(block)
-		fmt.Println("TimeStamp:", block.TimeStamp)
-		fmt.Printf("Data: %s\n", block.Data)
-        fmt.Printf("Hash: %x\n", block.Hash)
-		fmt.Printf("Prev Hash: %x\n", block.PrevHash)
-		fmt.Printf("Prev Hash: %d\n", block.Nonce)
-		fmt.Printf("is Validated: %s\n", strconv.FormatBool(pow.Validate()))
-	}
+	// for _, block := range GetBlockchain().blocks {
+	// 	pow := NewProofOfWork(block)
+	// 	fmt.Println("TimeStamp:", block.TimeStamp)
+	// 	fmt.Printf("Data: %s\n", block.Data)
+    //     fmt.Printf("Hash: %x\n", block.Hash)
+	// 	fmt.Printf("Prev Hash: %x\n", block.PrevHash)
+	// 	fmt.Printf("Prev Hash: %d\n", block.Nonce)
+	// 	fmt.Printf("is Validated: %s\n", strconv.FormatBool(pow.Validate()))
+	// }
 }
 
 // Serialize before sending
