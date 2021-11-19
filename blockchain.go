@@ -23,8 +23,11 @@ type Block struct {
 }
 
 type Blockchain struct {
-	blocks []*Block
+	blocks	[]*Block
+	last	[]byte
 }
+
+const dbFile = "houchain_%s.db"
 
 var Bc *Blockchain
 var once sync.Once
@@ -52,11 +55,16 @@ func generateGenesis() {
 
 // Get All Blockchains
 func GetBlockchain() *Blockchain {
-	db, err := bolt.Open("my.db", 0600, nil)
+	dbFile := fmt.Sprintf(dbFile, "0600")
+	db, err := bolt.Open(dbFile, 0600, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
+	err = db.Update(func(tx *bolt.Tx) error {
+		
+		return nil
+	})
 	if Bc == nil {
 		generateGenesis()
 	}
@@ -115,15 +123,15 @@ func (bc Blockchain) ShowBlocks() {
 
 // Serialize before sending
 func (b *Block) Serialize() []byte {
-	var network bytes.Buffer
+	var value bytes.Buffer
 
-	encoder := gob.NewEncoder(&network)
+	encoder := gob.NewEncoder(&value)
 	err := encoder.Encode(b)
 	if err != nil {
 		log.Fatal("Encode Error:", err)
 	}
 
-	return network.Bytes()
+	return value.Bytes()
 }
 
 // Deserialize block(not a method)
