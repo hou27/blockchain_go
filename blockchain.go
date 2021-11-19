@@ -69,7 +69,13 @@ func GetBlockchain() *Blockchain {
 		if bc == nil {
 			genesis := generateGenesis()
 			b, err := tx.CreateBucket([]byte("blocks"))
+			if err != nil {
+				log.Fatal(err)
+			}
 			err = b.Put(genesis.Hash, genesis.Serialize())
+			if err != nil {
+				log.Fatal(err)
+			}
 			err = b.Put([]byte("last"), genesis.Hash)
 			if err != nil {
 				log.Fatal(err)
