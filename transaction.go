@@ -29,3 +29,8 @@ func NewCoinbaseTX(to, data string) *Transaction {
 
 	return &tx
 }
+
+func NewUTXOTransaction(from, to string, amount int) *Transaction {
+
+	return &Transaction{}
+}
