@@ -3,7 +3,9 @@ package main
 import (
 	"bytes"
 	"crypto/sha256"
+	"encoding/gob"
 	"fmt"
+	"log"
 	"math"
 	"math/big"
 )
@@ -30,8 +32,9 @@ func (pow *ProofOfWork) prepareData(nonce int) []byte {
 	data := bytes.Join(
 		[][]byte{
 			[]byte(pow.block.PrevHash),
-			[]byte(pow.block.Data),
+			pow.block.HashTransactions(),
 			IntToHex(int64(pow.block.TimeStamp)),
+			IntToHex(int64(targetBits)),
 			IntToHex(int64(nonce)),
 		},
 		[]byte{},
@@ -71,4 +74,19 @@ func (pow *ProofOfWork) Validate() bool {
 
 	isValid := hashInt.Cmp(pow.target) == -1
 	return isValid
+}
+
+// Hashes the transaction and returns the hash
+func (tx Transaction) GetHash() []byte {
+	var writer bytes.Buffer
+	var hash [32]byte
+
+	enc := gob.NewEncoder(&writer)
+	err := enc.Encode(tx)
+	if err != nil {
+		log.Panic(err)
+	}
+	hash = sha256.Sum256(writer.Bytes())
+
+	return hash[:]
 }

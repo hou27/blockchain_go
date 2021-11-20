@@ -12,13 +12,13 @@ type Transaction struct {
 type TXInput struct {
 	Txid      int
 	Txout     int
-	ScriptSig string
+	ScriptSig string // Release script
 }
 
 // Transaction output
 type TXOutput struct {
 	Value        int
-	ScriptPubKey string
+	ScriptPubKey string // Lock script
 }
 
 // Creates a new coinbase transaction

@@ -2,27 +2,28 @@ package main
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/gob"
 	"log"
 	"time"
 )
 
 type Block struct {
-	TimeStamp	int32 `validate:"required"`
-	Hash		[]byte `validate:"required"`
-	PrevHash	[]byte `validate:"required"`
-	Data		[]byte `validate:"required"`
-	Nonce		int `validate:"min=0"`
+	TimeStamp		int32 `validate:"required"`
+	Hash			[]byte `validate:"required"`
+	PrevHash		[]byte `validate:"required"`
+	Transactions	[]*Transaction `validate:"required"`
+	Nonce			int `validate:"min=0"`
 }
 
 // Generate genesis block
-func GenerateGenesis() *Block {
-	return NewBlock("Genesis Block", []byte{})
+func GenerateGenesis(tx *Transaction) *Block {
+	return NewBlock([]*Transaction{tx}, []byte{})
 }
 
 // Prepare new block
-func NewBlock(data string, prevHash []byte) *Block {
-	newblock := &Block{int32(time.Now().Unix()), nil, prevHash, []byte(data), 0}
+func NewBlock(transactions []*Transaction, prevHash []byte) *Block {
+	newblock := &Block{int32(time.Now().Unix()), nil, prevHash, transactions, 0}
 	pow := NewProofOfWork(newblock)
 	nonce, hash := pow.Run()
 
@@ -31,17 +32,29 @@ func NewBlock(data string, prevHash []byte) *Block {
 	return newblock
 }
 
+// Hash transactions
+func (b *Block) HashTransactions() []byte {
+	var txHashes [][]byte
+	var txHash [32]byte
+
+	for _, tx := range b.Transactions {
+			txHashes = append(txHashes, tx.GetHash())
+	}
+	txHash = sha256.Sum256(bytes.Join(txHashes, []byte{}))
+	return txHash[:]
+}
+
 // Serialize before sending
 func (b *Block) Serialize() []byte {
-	var value bytes.Buffer
+	var writer bytes.Buffer
 
-	encoder := gob.NewEncoder(&value)
+	encoder := gob.NewEncoder(&writer)
 	err := encoder.Encode(b)
 	if err != nil {
 		log.Fatal("Encode Error:", err)
 	}
 
-	return value.Bytes()
+	return writer.Bytes()
 }
 
 // Deserialize block(not a method)

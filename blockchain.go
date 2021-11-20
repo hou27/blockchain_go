@@ -51,7 +51,8 @@ func GetBlockchain() *Blockchain {
 	err = db.Update(func(tx *bolt.Tx) error {
 		bc := tx.Bucket([]byte("blocks"))
 		if bc == nil {
-			genesis := GenerateGenesis()
+			cb := NewCoinbaseTX("init", "init base")
+			genesis := GenerateGenesis(cb)
 			b, err := tx.CreateBucket([]byte("blocks"))
 			if err != nil {
 				log.Fatal(err)
@@ -79,7 +80,7 @@ func GetBlockchain() *Blockchain {
 }
 
 // Add Blockchain
-func (bc *Blockchain) AddBlock(data string) {
+func (bc *Blockchain) AddBlock(transactions []*Transaction) {
 	var lastHash []byte
 
 	err := bc.db.View(func(tx *bolt.Tx) error {
@@ -92,7 +93,7 @@ func (bc *Blockchain) AddBlock(data string) {
 		log.Panic(err)
 	}
 
-	newBlock := NewBlock(data, lastHash)
+	newBlock := NewBlock(transactions, lastHash)
 
 	err = bc.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("blocks"))
@@ -126,7 +127,7 @@ func (bc Blockchain) ShowBlocks() {
 		pow := NewProofOfWork(block)
 
 		fmt.Println("\nTimeStamp:", block.TimeStamp)
-		fmt.Printf("Data: %s\n", block.Data)
+		fmt.Println("Data: ", block.Transactions)
         fmt.Printf("Hash: %x\n", block.Hash)
 		fmt.Printf("Prev Hash: %x\n", block.PrevHash)
 		fmt.Printf("Nonce: %d\n", block.Nonce)

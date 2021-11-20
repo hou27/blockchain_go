@@ -42,7 +42,8 @@ func (cli *Cli) Active() {
 			addBlockCmd.Usage()
 			os.Exit(1)
 		}
-		cli.bc.AddBlock(*addBlockData)
+		fmt.Println("addblock is being implemented.")
+		// cli.bc.AddBlock(*addBlockData)
 	}
 
 	if showBlocksCmd.Parsed() {
