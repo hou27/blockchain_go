@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strconv"
 	"sync"
 	"time"
 
@@ -24,6 +25,11 @@ type Block struct {
 type Blockchain struct {
 	db		*bolt.DB
 	last	[]byte
+}
+
+type BlockchainTmp struct {
+	db          *bolt.DB
+	currentHash []byte
 }
 
 const dbFile = "houchain_%s.db"
@@ -46,11 +52,6 @@ func (bc *Blockchain) validateStructure(newBlock Block) error {
 }
 
 func generateGenesis() *Block {
-	once.Do(func() {
-		Bc = &Blockchain{}
-		Bc.AddBlock("Genesis Block")
-	})
-
 	return NewBlock("Genesis Block", []byte{})
 }
 
@@ -63,7 +64,7 @@ func GetBlockchain() *Blockchain {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer db.Close()
+	// defer db.Close()
 	err = db.Update(func(tx *bolt.Tx) error {
 		bc := tx.Bucket([]byte("blocks"))
 		if bc == nil {
@@ -135,7 +136,7 @@ func (bc *Blockchain) AddBlock(data string) {
 			log.Panic(err)
 		}
 
-		err = b.Put([]byte("l"), newBlock.Hash)
+		err = b.Put([]byte("last"), newBlock.Hash)
 		if err != nil {
 			log.Panic(err)
 		}
@@ -163,16 +164,50 @@ func (bc *Blockchain) AddBlock(data string) {
 
 // Show Blockchains
 func (bc Blockchain) ShowBlocks() {
-	// for _, block := range GetBlockchain().blocks {
-	// 	pow := NewProofOfWork(block)
-	// 	fmt.Println("TimeStamp:", block.TimeStamp)
-	// 	fmt.Printf("Data: %s\n", block.Data)
-    //     fmt.Printf("Hash: %x\n", block.Hash)
-	// 	fmt.Printf("Prev Hash: %x\n", block.PrevHash)
-	// 	fmt.Printf("Prev Hash: %d\n", block.Nonce)
-	// 	fmt.Printf("is Validated: %s\n", strconv.FormatBool(pow.Validate()))
-	// }
+	bcT := bc.Iterator()
+	
+	for {
+		block := bcT.GetNextBlock()
+		pow := NewProofOfWork(block)
+
+		fmt.Println("\nTimeStamp:", block.TimeStamp)
+		fmt.Printf("Data: %s\n", block.Data)
+        fmt.Printf("Hash: %x\n", block.Hash)
+		fmt.Printf("Prev Hash: %x\n", block.PrevHash)
+		fmt.Printf("Nonce: %d\n", block.Nonce)
+
+		fmt.Printf("is Validated: %s\n", strconv.FormatBool(pow.Validate()))
+
+		if len(block.PrevHash) == 0 {
+			break
+		}
+	}
 }
+
+func (bc *Blockchain) Iterator() *BlockchainTmp {
+	bcT := &BlockchainTmp{bc.db, bc.last}
+ 
+	return bcT
+}
+
+func (bct *BlockchainTmp) GetNextBlock() *Block {
+	var block *Block
+
+	err := bct.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte("blocks"))
+		encodedBlock := b.Get(bct.currentHash)
+		block = DeserializeBlock(encodedBlock)
+
+		return nil
+	})
+	if err != nil {
+		log.Panic(err)
+	}
+
+	bct.currentHash = block.PrevHash
+	return block
+}
+
 
 // Serialize before sending
 func (b *Block) Serialize() []byte {

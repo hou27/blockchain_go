@@ -32,7 +32,6 @@ func (pow *ProofOfWork) prepareData(nonce int) []byte {
 			[]byte(pow.block.PrevHash),
 			[]byte(pow.block.Data),
 			IntToHex(int64(pow.block.TimeStamp)),
-			IntToHex(int64(targetBits)),
 			IntToHex(int64(nonce)),
 		},
 		[]byte{},
