@@ -51,6 +51,7 @@ func (pow *ProofOfWork) Run() (int, []byte) {
 
 		hashInt.SetBytes(hash[:])
 		if hashInt.Cmp(pow.target) == -1 {
+			fmt.Println()
 			break
 		} else {
 			nonce++

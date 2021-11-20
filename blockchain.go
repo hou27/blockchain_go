@@ -136,6 +136,8 @@ func (bc *Blockchain) AddBlock(data string) {
 
 		bc.last = newBlock.Hash
 
+		fmt.Println("Successfully Added")
+
 		return nil
 	})
 }
