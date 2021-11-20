@@ -95,13 +95,6 @@ func GetBlockchain() *Blockchain {
     return &bc
 }
 
-// func (bc Blockchain) getPrevHash() []byte {
-// 	if len(GetBlockchain().blocks) > 0 {
-// 		return GetBlockchain().blocks[len(GetBlockchain().blocks)-1].Hash
-// 	}
-// 	return nil
-// }
-
 // Prepare new block
 func NewBlock(data string, prevHash []byte) *Block {
 	newblock := &Block{int32(time.Now().Unix()), nil, prevHash, []byte(data), 0}
@@ -145,21 +138,6 @@ func (bc *Blockchain) AddBlock(data string) {
 
 		return nil
 	})
-	// prevHash := bc.getPrevHash()
-	// newBlock := NewBlock(data, prevHash)
-
-	// if bc.blocks != nil {
-	// 	isValidated := bc.validateStructure(*newBlock)
-	// 	if isValidated != nil {
-	// 		fmt.Println(isValidated)
-	// 	} else {
-	// 		bc.blocks = append(GetBlockchain().blocks, newBlock)
-	// 		fmt.Println("Added")
-	// 	}
-	// } else {
-	// 	bc.blocks = append(GetBlockchain().blocks, newBlock)
-	// 	fmt.Println("Added")
-	// }
 }
 
 // Show Blockchains
