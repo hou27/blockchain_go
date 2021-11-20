@@ -19,6 +19,8 @@ func (cli *Cli) Active() {
 	addBlockCmd := flag.NewFlagSet("addblock", flag.ExitOnError)
 	showBlocksCmd := flag.NewFlagSet("showblocks", flag.ExitOnError)
 
+	addBlockData := addBlockCmd.String("data", "", "Block data")
+
 	switch os.Args[1] {
 	case "addblock":
 		err := addBlockCmd.Parse(os.Args[2:])
@@ -36,11 +38,11 @@ func (cli *Cli) Active() {
 	}
 
 	if addBlockCmd.Parsed() {
-		if addBlockCmd.Arg(0) == "" {
+		if *addBlockData == "" {
 			addBlockCmd.Usage()
 			os.Exit(1)
 		}
-		cli.bc.AddBlock(addBlockCmd.Arg(0))
+		cli.bc.AddBlock(*addBlockData)
 	}
 
 	if showBlocksCmd.Parsed() {
