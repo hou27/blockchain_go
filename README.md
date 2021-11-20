@@ -7,4 +7,6 @@ Making a Cryptocurrency with GO.
 go run .
 ```
 
+- Proof-of-Work
 - persistence-and-cli
+- Transactions
