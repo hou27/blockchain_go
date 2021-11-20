@@ -1,26 +1,14 @@
 package main
 
 import (
-	"bytes"
-	"encoding/gob"
 	"errors"
 	"fmt"
 	"log"
 	"strconv"
-	"sync"
-	"time"
 
 	"github.com/boltdb/bolt"
 	"github.com/go-playground/validator"
 )
-
-type Block struct {
-	TimeStamp	int32 `validate:"required"`
-	Hash		[]byte `validate:"required"`
-	PrevHash	[]byte `validate:"required"`
-	Data		[]byte `validate:"required"`
-	Nonce		int `validate:"min=0"`
-}
 
 type Blockchain struct {
 	db		*bolt.DB
@@ -35,7 +23,6 @@ type BlockchainTmp struct {
 const dbFile = "houchain_%s.db"
 
 var Bc *Blockchain
-var once sync.Once
 var errNotValid = errors.New("Can't add this block")
 
 func (bc *Blockchain) validateStructure(newBlock Block) error {
@@ -51,10 +38,6 @@ func (bc *Blockchain) validateStructure(newBlock Block) error {
 	return nil
 }
 
-func generateGenesis() *Block {
-	return NewBlock("Genesis Block", []byte{})
-}
-
 // Get All Blockchains
 func GetBlockchain() *Blockchain {
 	var last []byte
@@ -68,7 +51,7 @@ func GetBlockchain() *Blockchain {
 	err = db.Update(func(tx *bolt.Tx) error {
 		bc := tx.Bucket([]byte("blocks"))
 		if bc == nil {
-			genesis := generateGenesis()
+			genesis := GenerateGenesis()
 			b, err := tx.CreateBucket([]byte("blocks"))
 			if err != nil {
 				log.Fatal(err)
@@ -95,17 +78,6 @@ func GetBlockchain() *Blockchain {
     return &bc
 }
 
-// Prepare new block
-func NewBlock(data string, prevHash []byte) *Block {
-	newblock := &Block{int32(time.Now().Unix()), nil, prevHash, []byte(data), 0}
-	pow := NewProofOfWork(newblock)
-	nonce, hash := pow.Run()
-
-	newblock.Hash = hash[:]
-	newblock.Nonce = nonce
-	return newblock
-}
-// add to boltDB
 // Add Blockchain
 func (bc *Blockchain) AddBlock(data string) {
 	var lastHash []byte
@@ -140,6 +112,9 @@ func (bc *Blockchain) AddBlock(data string) {
 
 		return nil
 	})
+	if err != nil {
+		log.Panic(err)
+	}
 }
 
 // Show Blockchains
@@ -164,6 +139,7 @@ func (bc Blockchain) ShowBlocks() {
 	}
 }
 
+// Blockchain iterator
 func (bc *Blockchain) Iterator() *BlockchainTmp {
 	bcT := &BlockchainTmp{bc.db, bc.last}
  
@@ -186,31 +162,4 @@ func (bct *BlockchainTmp) getNextBlock() *Block {
 
 	bct.currentHash = block.PrevHash
 	return block
-}
-
-
-// Serialize before sending
-func (b *Block) Serialize() []byte {
-	var value bytes.Buffer
-
-	encoder := gob.NewEncoder(&value)
-	err := encoder.Encode(b)
-	if err != nil {
-		log.Fatal("Encode Error:", err)
-	}
-
-	return value.Bytes()
-}
-
-// Deserialize block(not a method)
-func DeserializeBlock(d []byte) *Block {
-	var block Block
-
-	decoder := gob.NewDecoder(bytes.NewReader(d))
-	err := decoder.Decode(&block)
-	if err != nil {
-		log.Fatal("Decode Error:", err)
-	}
-
-	return &block
 }

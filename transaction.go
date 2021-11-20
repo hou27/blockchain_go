@@ -11,7 +11,7 @@ type Transaction struct {
 // Transaction input
 type TXInput struct {
 	Txid      int
-	Txout      int
+	Txout     int
 	ScriptSig string
 }
 
