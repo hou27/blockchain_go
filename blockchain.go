@@ -15,7 +15,7 @@ type Blockchain struct {
 	last	[]byte
 }
 
-type BlockchainTmp struct {
+type BlockchainIterator struct {
 	db          *bolt.DB
 	currentHash []byte
 }
@@ -120,10 +120,10 @@ func (bc *Blockchain) AddBlock(transactions []*Transaction) {
 
 // Show Blockchains
 func (bc Blockchain) ShowBlocks() {
-	bcT := bc.Iterator()
+	bcI := bc.Iterator()
 	
 	for {
-		block := bcT.getNextBlock()
+		block := bcI.getNextBlock()
 		pow := NewProofOfWork(block)
 
 		fmt.Println("\nTimeStamp:", block.TimeStamp)
@@ -141,18 +141,18 @@ func (bc Blockchain) ShowBlocks() {
 }
 
 // Blockchain iterator
-func (bc *Blockchain) Iterator() *BlockchainTmp {
-	bcT := &BlockchainTmp{bc.db, bc.last}
+func (bc *Blockchain) Iterator() *BlockchainIterator {
+	bcI := &BlockchainIterator{bc.db, bc.last}
  
-	return bcT
+	return bcI
 }
 
-func (bct *BlockchainTmp) getNextBlock() *Block {
+func (bcI *BlockchainIterator) getNextBlock() *Block {
 	var block *Block
 
-	err := bct.db.View(func(tx *bolt.Tx) error {
+	err := bcI.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("blocks"))
-		encodedBlock := b.Get(bct.currentHash)
+		encodedBlock := b.Get(bcI.currentHash)
 		block = DeserializeBlock(encodedBlock)
 
 		return nil
@@ -161,6 +161,6 @@ func (bct *BlockchainTmp) getNextBlock() *Block {
 		log.Panic(err)
 	}
 
-	bct.currentHash = block.PrevHash
+	bcI.currentHash = block.PrevHash
 	return block
 }
