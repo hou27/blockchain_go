@@ -199,18 +199,17 @@ func (bc *Blockchain) FindUTXOs(address string, amount int) (int, map[string][]i
 Work:
 	for _, tx := range unspentTXs {
 		txID := hex.EncodeToString(tx.ID)
-
+		
 		for index, txout := range tx.Txout {
 			if txout.ScriptPubKey == address && accumulated < amount {
 				accumulated += txout.Value
 				unspentOutputs[txID] = append(unspentOutputs[txID], index)
-
 				if accumulated >= amount {
 					break Work
 				}
 			}
 		}
 	}
-
+	
 	return accumulated, unspentOutputs
 }

@@ -31,7 +31,7 @@ type TXOutput struct {
 }
 
 // Sets ID of a transaction
-func (tx Transaction) SetID() {
+func (tx *Transaction) SetID() {
 	var encoded bytes.Buffer
 	var hash [32]byte
 
@@ -41,6 +41,7 @@ func (tx Transaction) SetID() {
 		log.Panic(err)
 	}
 	hash = sha256.Sum256(encoded.Bytes())
+	
 	tx.ID = hash[:]
 }
 
@@ -72,7 +73,6 @@ func NewUTXOTransaction(from, to string, amount int, bc *Blockchain) *Transactio
 			if err != nil {
 				log.Panic(err)
 			}
-
 			input := TXInput{txID, out, from}
 			inputs = append(inputs, input)
 		}
@@ -81,12 +81,12 @@ func NewUTXOTransaction(from, to string, amount int, bc *Blockchain) *Transactio
 	// Build a list of outputs
 	outputs = append(outputs, TXOutput{amount, to})
 	if balance > amount {
-		outputs = append(outputs, TXOutput{balance - amount, from}) // a change
+		outputs = append(outputs, TXOutput{balance - amount, from})
 	}
 
 	tx := Transaction{nil, inputs, outputs}
 	tx.SetID()
-
+	
 	return &tx
 }
 

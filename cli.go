@@ -28,7 +28,7 @@ func (cli *Cli) Active() {
 	getBalanceAddress := getBalanceCmd.String("address", "", "The address to get balance for")
 
 	switch os.Args[1] {
-	case "addblock":
+	case "send":
 		err := sendCmd.Parse(os.Args[2:])
 		if err != nil {
 			log.Panic(err)
@@ -71,9 +71,10 @@ func (cli *Cli) Active() {
 
 func (cli *Cli) send(from, to string, amount int) {
 	bc := GetBlockchain(from)
+	defer bc.db.Close()
 	tx := NewUTXOTransaction(from, to, amount, bc)
-	cli.bc.AddBlock([]*Transaction{tx})
-	fmt.Println("Success!")
+	bc.AddBlock([]*Transaction{tx})
+	fmt.Println("Send Complete!!")
 }
 
 func (cli *Cli) getBalance(address string) {
