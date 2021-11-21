@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"log"
@@ -39,7 +40,7 @@ func (bc *Blockchain) validateStructure(newBlock Block) error {
 }
 
 // Get All Blockchains
-func GetBlockchain() *Blockchain {
+func GetBlockchain(address string) *Blockchain {
 	var last []byte
 
 	dbFile := fmt.Sprintf(dbFile, "0600")
@@ -51,7 +52,7 @@ func GetBlockchain() *Blockchain {
 	err = db.Update(func(tx *bolt.Tx) error {
 		bc := tx.Bucket([]byte("blocks"))
 		if bc == nil {
-			cb := NewCoinbaseTX("init", "init base")
+			cb := NewCoinbaseTX(address, "init base")
 			genesis := GenerateGenesis(cb)
 			b, err := tx.CreateBucket([]byte("blocks"))
 			if err != nil {
@@ -131,7 +132,6 @@ func (bc Blockchain) ShowBlocks() {
         fmt.Printf("Hash: %x\n", block.Hash)
 		fmt.Printf("Prev Hash: %x\n", block.PrevHash)
 		fmt.Printf("Nonce: %d\n", block.Nonce)
-
 		fmt.Printf("is Validated: %s\n", strconv.FormatBool(pow.Validate()))
 
 		if len(block.PrevHash) == 0 {
@@ -163,4 +163,76 @@ func (bcI *BlockchainIterator) getNextBlock() *Block {
 
 	bcI.currentHash = block.PrevHash
 	return block
+}
+
+// Returns a list of transactions containing unspent outputs
+func (bc *Blockchain) FindUnspentTxs(address string) []*Transaction {
+	var unspentTXs []*Transaction
+	spentTXOs := make(map[string][]int)
+	bcI := bc.Iterator()
+
+	for {
+		block := bcI.getNextBlock()
+
+		for _, tx := range block.Transactions {
+			txID := hex.EncodeToString(tx.ID)
+
+		Outputs:
+			for index, out := range tx.Txout {
+				// Was the output spent?
+				if spentTXOs[txID] != nil {
+					for _, spentOut := range spentTXOs[txID] {
+						if spentOut == index {
+							continue Outputs
+						}
+					}
+				}
+
+				if out.ScriptPubKey == address {
+					unspentTXs = append(unspentTXs, tx)
+					continue Outputs
+				}
+			}
+
+			if tx.IsCoinbase() == false {
+				for _, in := range tx.Txin {
+					if in.ScriptSig == address {
+						inTxID := hex.EncodeToString(in.Txid)
+						spentTXOs[inTxID] = append(spentTXOs[inTxID], in.Txout)
+					}
+				}
+			}
+		}
+
+		if len(block.PrevHash) == 0 {
+			break
+		}
+	}
+
+	return unspentTXs
+}
+
+// Finds and returns unspend transaction outputs for the address
+func (bc *Blockchain) FindUTXOs(address string, amount int) (int, map[string][]int) {
+	unspentOutputs := make(map[string][]int)
+	unspentTXs := bc.FindUnspentTxs(address)
+	accumulated := 0
+
+Work:
+	for _, tx := range unspentTXs {
+		txID := hex.EncodeToString(tx.ID)
+
+		for index, txout := range tx.Txout {
+			if txout.ScriptPubKey == address && accumulated < amount {
+				accumulated += txout.Value
+				unspentOutputs[txID] = append(unspentOutputs[txID], index)
+
+				if accumulated >= amount {
+					break Work
+				}
+			}
+		}
+	}
+
+	return accumulated, unspentOutputs
 }

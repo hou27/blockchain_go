@@ -19,10 +19,12 @@ func (cli *Cli) Active() {
 	}
 	sendCmd := flag.NewFlagSet("send", flag.ExitOnError)
 	showBlocksCmd := flag.NewFlagSet("showblocks", flag.ExitOnError)
+	getBalanceCmd := flag.NewFlagSet("getbalance", flag.ExitOnError)
 
 	sendFrom := sendCmd.String("from", "", "Source address")
 	sendTo := sendCmd.String("to", "", "Destination address")
 	sendAmount := sendCmd.Int("amount", 0, "Amount to send")
+	getBalanceAddress := getBalanceCmd.String("address", "", "The address to get balance for")
 
 	switch os.Args[1] {
 	case "addblock":
@@ -32,6 +34,11 @@ func (cli *Cli) Active() {
 		}
 	case "showblocks":
 		err := showBlocksCmd.Parse(os.Args[2:])
+		if err != nil {
+			log.Panic(err)
+		}
+	case "getbalance":
+		err := getBalanceCmd.Parse(os.Args[2:])
 		if err != nil {
 			log.Panic(err)
 		}
@@ -51,16 +58,45 @@ func (cli *Cli) Active() {
 	if showBlocksCmd.Parsed() {
 		cli.bc.ShowBlocks()
 	}
+
+	if getBalanceCmd.Parsed() {
+		if *getBalanceAddress == "" {
+			getBalanceCmd.Usage()
+			os.Exit(1)
+		}
+		cli.getBalance(*getBalanceAddress)
+	}
 }
 
 func (cli *Cli) send(from, to string, amount int) {
-	tx := NewUTXOTransaction(from, to, amount)
+	bc := GetBlockchain(from)
+	tx := NewUTXOTransaction(from, to, amount, bc)
 	cli.bc.AddBlock([]*Transaction{tx})
 	fmt.Println("Success!")
+}
+
+func (cli *Cli) getBalance(address string) {
+	bc := GetBlockchain(address)
+	defer bc.db.Close()
+
+	balance := 0
+
+	utxs := bc.FindUnspentTxs(address)
+
+	for _, tx := range utxs {
+		for _, out := range tx.Txout {
+			if out.ScriptPubKey == address {
+				balance += out.Value
+			}
+		}
+	}
+
+	fmt.Printf("Balance of '%s': %d\n", address, balance)
 }
 
 func (cli *Cli) printUsage() {
 	fmt.Printf("How to use:\n\n")
 	fmt.Println("  send -from FROM -to TO -amount AMOUNT - send AMOUNT of coins from FROM address to TO")
 	fmt.Println("  showblocks - print all the blocks of the blockchain")
+	fmt.Println("  getbalance -address ADDRESS - Get balance of ADDRESS")
 }
