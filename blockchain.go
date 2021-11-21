@@ -156,11 +156,11 @@ func (bc *Blockchain) FindUnspentTxs(address string) []*Transaction {
 			txID := hex.EncodeToString(tx.ID)
 
 		Outputs:
-			for index, out := range tx.Txout {
+			for outIndex, out := range tx.Txout {
 				// Was the output spent?
 				if spentTXOs[txID] != nil {
 					for _, spentOut := range spentTXOs[txID] {
-						if spentOut == index {
+						if spentOut == outIndex {
 							continue Outputs
 						}
 					}
@@ -171,12 +171,12 @@ func (bc *Blockchain) FindUnspentTxs(address string) []*Transaction {
 					continue Outputs
 				}
 			}
-
+			
 			if tx.IsCoinbase() == false {
 				for _, in := range tx.Txin {
 					if in.ScriptSig == address {
 						inTxID := hex.EncodeToString(in.Txid)
-						spentTXOs[inTxID] = append(spentTXOs[inTxID], in.Txout)
+						spentTXOs[inTxID] = append(spentTXOs[inTxID], in.TxoutIdx)
 					}
 				}
 			}
@@ -186,7 +186,6 @@ func (bc *Blockchain) FindUnspentTxs(address string) []*Transaction {
 			break
 		}
 	}
-
 	return unspentTXs
 }
 

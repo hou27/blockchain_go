@@ -19,9 +19,9 @@ type Transaction struct {
 
 // Transaction input
 type TXInput struct {
-	Txid      []byte
-	Txout     int
-	ScriptSig string // Unlock script
+	Txid		[]byte
+	TxoutIdx	int
+	ScriptSig	string // Unlock script
 }
 
 // Transaction output
@@ -92,5 +92,5 @@ func NewUTXOTransaction(from, to string, amount int, bc *Blockchain) *Transactio
 
 // Checks whether the transaction is coinbase
 func (tx Transaction) IsCoinbase() bool {
-	return len(tx.Txin) == 1 && len(tx.Txin[0].Txid) == 0 && tx.Txin[0].Txout == -1
+	return len(tx.Txin) == 1 && len(tx.Txin[0].Txid) == 0 && tx.Txin[0].TxoutIdx == -1
 }
