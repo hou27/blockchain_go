@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"strconv"
 
 	"github.com/boltdb/bolt"
 	"github.com/go-playground/validator"
@@ -116,27 +115,6 @@ func (bc *Blockchain) AddBlock(transactions []*Transaction) {
 	})
 	if err != nil {
 		log.Panic(err)
-	}
-}
-
-// Show Blockchains
-func (bc Blockchain) ShowBlocks() {
-	bcI := bc.Iterator()
-	
-	for {
-		block := bcI.getNextBlock()
-		pow := NewProofOfWork(block)
-
-		fmt.Println("\nTimeStamp:", block.TimeStamp)
-		fmt.Println("Data: ", block.Transactions)
-        fmt.Printf("Hash: %x\n", block.Hash)
-		fmt.Printf("Prev Hash: %x\n", block.PrevHash)
-		fmt.Printf("Nonce: %d\n", block.Nonce)
-		fmt.Printf("is Validated: %s\n", strconv.FormatBool(pow.Validate()))
-
-		if len(block.PrevHash) == 0 {
-			break
-		}
 	}
 }
 

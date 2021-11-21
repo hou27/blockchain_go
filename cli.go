@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 )
 
 type Cli struct {
@@ -56,7 +57,7 @@ func (cli *Cli) Active() {
 	}
 
 	if showBlocksCmd.Parsed() {
-		cli.bc.ShowBlocks()
+		cli.showBlocks()
 	}
 
 	if getBalanceCmd.Parsed() {
@@ -92,6 +93,28 @@ func (cli *Cli) getBalance(address string) {
 	}
 
 	fmt.Printf("Balance of '%s': %d\n", address, balance)
+}
+
+// Show Blockchains
+func (cli *Cli) showBlocks() {
+	bc := GetBlockchain("")
+	defer bc.db.Close()
+	bcI := bc.Iterator()
+	for {
+		block := bcI.getNextBlock()
+		pow := NewProofOfWork(block)
+
+		fmt.Println("\nTimeStamp:", block.TimeStamp)
+		fmt.Println("Data: ", block.Transactions)
+        fmt.Printf("Hash: %x\n", block.Hash)
+		fmt.Printf("Prev Hash: %x\n", block.PrevHash)
+		fmt.Printf("Nonce: %d\n", block.Nonce)
+		fmt.Printf("is Validated: %s\n", strconv.FormatBool(pow.Validate()))
+
+		if len(block.PrevHash) == 0 {
+			break
+		}
+	}
 }
 
 func (cli *Cli) printUsage() {
