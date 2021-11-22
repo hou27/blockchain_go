@@ -22,6 +22,7 @@ func (cli *Cli) Active() {
 	showBlocksCmd := flag.NewFlagSet("showblocks", flag.ExitOnError)
 	getBalanceCmd := flag.NewFlagSet("getbalance", flag.ExitOnError)
 	createWalletCmd := flag.NewFlagSet("createwallet", flag.ExitOnError)
+	showAddrsCmd := flag.NewFlagSet("showaddresses", flag.ExitOnError)
 
 	sendFrom := sendCmd.String("from", "", "Source address")
 	sendTo := sendCmd.String("to", "", "Destination address")
@@ -46,6 +47,11 @@ func (cli *Cli) Active() {
 		}
 	case "createwallet":
 		err := createWalletCmd.Parse(os.Args[2:])
+		if err != nil {
+			log.Panic(err)
+		}
+	case "showaddresses":
+		err := showAddrsCmd.Parse(os.Args[2:])
 		if err != nil {
 			log.Panic(err)
 		}
@@ -76,6 +82,10 @@ func (cli *Cli) Active() {
 
 	if createWalletCmd.Parsed() {
 		cli.createWallet()
+	}
+
+	if showAddrsCmd.Parsed() {
+		cli.showAddresses()
 	}
 }
 
@@ -114,6 +124,18 @@ func (cli *Cli) getBalance(address string) {
 	fmt.Printf("Balance of '%s': %d\n", address, balance)
 }
 
+func (cli *Cli) showAddresses() {
+	wallets, err := NewWallets()
+	if err != nil {
+		log.Panic(err)
+	}
+	addresses := wallets.GetAddresses()
+
+	for _, address := range addresses {
+		fmt.Println(address)
+	}
+}
+
 // Show Blockchains
 func (cli *Cli) showBlocks() {
 	bc := GetBlockchain("")
@@ -142,4 +164,5 @@ func (cli *Cli) printUsage() {
 	fmt.Println("  showblocks - print all the blocks of the blockchain")
 	fmt.Println("  getbalance -address ADDRESS - Get balance of ADDRESS")
 	fmt.Println("  createwallet - Create your Wallet")
+	fmt.Println("  showaddresses - Show all addresses")
 }

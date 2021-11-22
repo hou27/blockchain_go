@@ -116,3 +116,14 @@ func (ws Wallets) SaveToFile() {
 		log.Panic(err)
 	}
 }
+
+// Returns addresses stored at wallet file
+func (ws *Wallets) GetAddresses() []string {
+	var addrs []string
+
+	for address := range ws.Wallets {
+		addrs = append(addrs, address)
+	}
+
+	return addrs
+}
