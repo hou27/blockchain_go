@@ -21,6 +21,7 @@ func (cli *Cli) Active() {
 	sendCmd := flag.NewFlagSet("send", flag.ExitOnError)
 	showBlocksCmd := flag.NewFlagSet("showblocks", flag.ExitOnError)
 	getBalanceCmd := flag.NewFlagSet("getbalance", flag.ExitOnError)
+	createWalletCmd := flag.NewFlagSet("createwallet", flag.ExitOnError)
 
 	sendFrom := sendCmd.String("from", "", "Source address")
 	sendTo := sendCmd.String("to", "", "Destination address")
@@ -40,6 +41,11 @@ func (cli *Cli) Active() {
 		}
 	case "getbalance":
 		err := getBalanceCmd.Parse(os.Args[2:])
+		if err != nil {
+			log.Panic(err)
+		}
+	case "createwallet":
+		err := createWalletCmd.Parse(os.Args[2:])
 		if err != nil {
 			log.Panic(err)
 		}
@@ -66,6 +72,21 @@ func (cli *Cli) Active() {
 			os.Exit(1)
 		}
 		cli.getBalance(*getBalanceAddress)
+	}
+
+	if createWalletCmd.Parsed() {
+		cli.createWallet()
+	}
+}
+
+func (cli *Cli) createWallet() {
+	wallet, err := NewWallet()
+	if err == nil {
+		fmt.Printf("Your address: %s\n", wallet.GetAddress())
+		wallet.SaveToFile()
+	} else {
+		fmt.Println(err.Error())
+		os.Exit(1)
 	}
 }
 
@@ -123,4 +144,5 @@ func (cli *Cli) printUsage() {
 	fmt.Println("  send -from FROM -to TO -amount AMOUNT - send AMOUNT of coins from FROM address to TO")
 	fmt.Println("  showblocks - print all the blocks of the blockchain")
 	fmt.Println("  getbalance -address ADDRESS - Get balance of ADDRESS")
+	fmt.Println("  createwallet - Create your Wallet")
 }
