@@ -80,14 +80,11 @@ func (cli *Cli) Active() {
 }
 
 func (cli *Cli) createWallet() {
-	wallet, err := NewWallet()
-	if err == nil {
-		fmt.Printf("Your address: %s\n", wallet.GetAddress())
-		wallet.SaveToFile()
-	} else {
-		fmt.Println(err.Error())
-		os.Exit(1)
-	}
+	wallets, _ := NewWallets()
+	address := wallets.CreateWallet()
+	wallets.SaveToFile()
+
+	fmt.Printf("Your new address: %s\n", address)
 }
 
 func (cli *Cli) send(from, to string, amount int) {

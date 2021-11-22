@@ -7,7 +7,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/gob"
-	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -23,6 +23,11 @@ const walletFile = "gowallet.dat"
 type Wallet struct {
 	PrivateKey ecdsa.PrivateKey
 	PublicKey  []byte
+}
+
+// Wallets stores bunch of wallets
+type Wallets struct {
+	Wallets map[string]*Wallet
 }
 
 // Get wallet address
@@ -47,11 +52,7 @@ func HashPublicKey(pubKey []byte) []byte {
 }
 
 // Generate New Wallet
-func NewWallet() (*Wallet, error) {
-	if _, err := os.Stat(walletFile); !os.IsNotExist(err) {
-		return nil, errors.New("Wallet already exists")
-	}
-	
+func NewWallet() *Wallet {
 	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
 		log.Panic(err)
@@ -59,16 +60,53 @@ func NewWallet() (*Wallet, error) {
 
 	publicKey := append(privateKey.PublicKey.X.Bytes(), privateKey.PublicKey.Y.Bytes()...)
 
-	return &Wallet{*privateKey, publicKey}, nil
+	return &Wallet{*privateKey, publicKey}
 }
 
-// SaveToFile saves the wallet to a file
-func (w Wallet) SaveToFile() {
+// CreateWallet adds a Wallet to Wallets
+func (ws *Wallets) CreateWallet() string {
+	wallet := NewWallet()
+	address := fmt.Sprintf("%s", wallet.GetAddress())
+
+	ws.Wallets[address] = wallet
+
+	return address
+}
+
+// Creates wallets and fills it from a file if it exists
+func NewWallets() (*Wallets, error) {
+	wallets := Wallets{}
+	wallets.Wallets = make(map[string]*Wallet)
+
+	if _, err := os.Stat(walletFile); os.IsNotExist(err) {
+		return &wallets, err
+	}
+
+	fileContent, err := ioutil.ReadFile(walletFile)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	var ws Wallets
+	gob.Register(elliptic.P256())
+	decoder := gob.NewDecoder(bytes.NewReader(fileContent))
+	err = decoder.Decode(&ws)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	wallets.Wallets = ws.Wallets
+
+	return &wallets, err
+}
+
+// Saves the wallets to a file
+func (ws Wallets) SaveToFile() {
 	var content bytes.Buffer
 
 	gob.Register(elliptic.P256())
 	encoder := gob.NewEncoder(&content)
-	err := encoder.Encode(w)
+	err := encoder.Encode(ws)
 	if err != nil {
 		log.Panic(err)
 	}
