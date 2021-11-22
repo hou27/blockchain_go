@@ -66,9 +66,7 @@ func NewWallet() (*Wallet, error) {
 func (w Wallet) SaveToFile() {
 	var content bytes.Buffer
 
-	// https://stackoverflow.com/questions/32676898/whats-the-purpose-of-gob-register-method
-	// 인코더와 디코더에 대한 구체적인 유형을 등록한다. https://runebook.dev/ko/docs/go/encoding/gob/index
-	gob.Register(elliptic.P256()) // https://pkg.go.dev/crypto/elliptic
+	gob.Register(elliptic.P256())
 	encoder := gob.NewEncoder(&content)
 	err := encoder.Encode(w)
 	if err != nil {
