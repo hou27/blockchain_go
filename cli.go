@@ -6,6 +6,8 @@ import (
 	"log"
 	"os"
 	"strconv"
+
+	"github.com/btcsuite/btcutil/base58"
 )
 
 type Cli struct {
@@ -111,11 +113,15 @@ func (cli *Cli) getBalance(address string) {
 
 	balance := 0
 
-	utxs := bc.FindUnspentTxs(address)
+	publicKeyHash, _, err := base58.CheckDecode(address)
+	if err != nil {
+		log.Panic(err)
+	}
+	utxs := bc.FindUnspentTxs(publicKeyHash)
 
 	for _, tx := range utxs {
 		for _, out := range tx.Txout {
-			if out.ScriptPubKey == address {
+			if out.IsLockedWithKey(publicKeyHash) {
 				balance += out.Value
 			}
 		}

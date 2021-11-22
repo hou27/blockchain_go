@@ -32,9 +32,9 @@ type Wallets struct {
 
 // Get wallet address
 func (w Wallet) GetAddress() string {
-	pubKeyHash := HashPublicKey(w.PublicKey)
+	publicKeyHash := HashPublicKey(w.PublicKey)
 
-	return base58.CheckEncode(pubKeyHash, version)
+	return base58.CheckEncode(publicKeyHash, version)
 }
 
 // Hash public key
@@ -126,4 +126,9 @@ func (ws *Wallets) GetAddresses() []string {
 	}
 
 	return addrs
+}
+
+// Returns a Wallet by address
+func (ws Wallets) GetWallet(address string) Wallet {
+	return *ws.Wallets[address]
 }

@@ -6,6 +6,8 @@ import (
 	"encoding/gob"
 	"encoding/hex"
 	"log"
+
+	"github.com/btcsuite/btcutil/base58"
 )
 
 const subsidy = 10
@@ -21,13 +23,13 @@ type Transaction struct {
 type TXInput struct {
 	Txid		[]byte
 	TxoutIdx	int
-	ScriptSig	string // Unlock script
+	ScriptSig	[]byte // Unlock script
 }
 
 // Transaction output
 type TXOutput struct {
 	Value        int
-	ScriptPubKey string // Lock script
+	ScriptPubKey []byte // Lock script
 }
 
 // Sets ID of a transaction
@@ -45,10 +47,39 @@ func (tx *Transaction) SetID() {
 	tx.ID = hash[:]
 }
 
+// Unlock Tx
+func (tI TXInput) Unlock(publicKeyHash []byte) bool {
+	lockingHash := HashPublicKey(tI.ScriptSig)
+
+	return bytes.Compare(lockingHash, publicKeyHash) == 0
+}
+
+// Check key
+func (tO TXOutput) IsLockedWithKey(publicKeyHash []byte) bool {
+	return bytes.Compare(tO.ScriptPubKey, publicKeyHash) == 0
+}
+
+// Lock with publicKey
+func (tO *TXOutput) Lock(address string) {
+	publicKeyHash, _, err := base58.CheckDecode(address)
+	if err != nil {
+		log.Panic(err)
+	}
+	tO.ScriptPubKey = publicKeyHash
+}
+
+// Create a new TXOutput
+func NewTXOutput(value int, address string) *TXOutput {
+	txo := &TXOutput{value, nil}
+	txo.Lock(address)
+
+	return txo
+}
+
 // Creates a new coinbase transaction
 func NewCoinbaseTX(to, data string) *Transaction {
-	txin := TXInput{[]byte{}, -1, data}
-	txout := TXOutput{subsidy, to}
+	txin := TXInput{[]byte{}, -1, []byte(data)}
+	txout := *NewTXOutput(subsidy, to)
 	tx := Transaction{nil, []TXInput{txin}, []TXOutput{txout}}
 
 	return &tx
@@ -59,8 +90,13 @@ func NewUTXOTransaction(from, to string, amount int, bc *Blockchain) *Transactio
 	var inputs []TXInput
 	var outputs []TXOutput
 
-	
-	balance, validOutputs := bc.FindUTXOs(from, amount)
+	wallets, err := NewWallets()
+	if err != nil {
+		log.Panic(err)
+	}
+	wallet := wallets.GetWallet(from)
+	publicKeyHash := HashPublicKey(wallet.PublicKey)
+	balance, validOutputs := bc.FindUTXOs(publicKeyHash, amount)
 
 	if balance < amount {
 		log.Panic("ERROR: Not enough funds")
@@ -73,15 +109,15 @@ func NewUTXOTransaction(from, to string, amount int, bc *Blockchain) *Transactio
 			if err != nil {
 				log.Panic(err)
 			}
-			input := TXInput{txID, out, from}
+			input := TXInput{txID, out, wallet.PublicKey}
 			inputs = append(inputs, input)
 		}
 	}
 
 	// Build a list of outputs
-	outputs = append(outputs, TXOutput{amount, to})
+	outputs = append(outputs, *NewTXOutput(amount, to))
 	if balance > amount {
-		outputs = append(outputs, TXOutput{balance - amount, from})
+		outputs = append(outputs, *NewTXOutput(balance - amount, from))
 	}
 
 	tx := Transaction{nil, inputs, outputs}

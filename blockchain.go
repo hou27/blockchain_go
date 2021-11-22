@@ -144,7 +144,7 @@ func (bcI *BlockchainIterator) getNextBlock() *Block {
 }
 
 // Returns a list of transactions containing unspent outputs
-func (bc *Blockchain) FindUnspentTxs(address string) []*Transaction {
+func (bc *Blockchain) FindUnspentTxs(publicKeyHash []byte) []*Transaction {
 	var unspentTXs []*Transaction
 	spentTXOs := make(map[string][]int)
 	bcI := bc.Iterator()
@@ -166,7 +166,7 @@ func (bc *Blockchain) FindUnspentTxs(address string) []*Transaction {
 					}
 				}
 
-				if out.ScriptPubKey == address {
+				if out.IsLockedWithKey(publicKeyHash) {
 					unspentTXs = append(unspentTXs, tx)
 					continue Outputs
 				}
@@ -174,7 +174,7 @@ func (bc *Blockchain) FindUnspentTxs(address string) []*Transaction {
 			
 			if tx.IsCoinbase() == false {
 				for _, in := range tx.Txin {
-					if in.ScriptSig == address {
+					if in.Unlock(publicKeyHash) {
 						inTxID := hex.EncodeToString(in.Txid)
 						spentTXOs[inTxID] = append(spentTXOs[inTxID], in.TxoutIdx)
 					}
@@ -190,9 +190,9 @@ func (bc *Blockchain) FindUnspentTxs(address string) []*Transaction {
 }
 
 // Finds and returns unspend transaction outputs for the address
-func (bc *Blockchain) FindUTXOs(address string, amount int) (int, map[string][]int) {
+func (bc *Blockchain) FindUTXOs(publicKeyHash []byte, amount int) (int, map[string][]int) {
 	unspentOutputs := make(map[string][]int)
-	unspentTXs := bc.FindUnspentTxs(address)
+	unspentTXs := bc.FindUnspentTxs(publicKeyHash)
 	accumulated := 0
 
 Work:
@@ -200,7 +200,7 @@ Work:
 		txID := hex.EncodeToString(tx.ID)
 		
 		for index, txout := range tx.Txout {
-			if txout.ScriptPubKey == address && accumulated < amount {
+			if txout.IsLockedWithKey(publicKeyHash) && accumulated < amount {
 				accumulated += txout.Value
 				unspentOutputs[txID] = append(unspentOutputs[txID], index)
 				if accumulated >= amount {
