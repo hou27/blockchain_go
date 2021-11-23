@@ -15,8 +15,8 @@ const subsidy = 10
 // Coin transaction
 type Transaction struct {
 	ID		[]byte
-	Txin	[]TXInput
-	Txout	[]TXOutput
+	Vin		[]TXInput
+	Vout	[]TXOutput
 }
 
 // Transaction input
@@ -128,5 +128,5 @@ func NewUTXOTransaction(from, to string, amount int, bc *Blockchain) *Transactio
 
 // Checks whether the transaction is coinbase
 func (tx Transaction) IsCoinbase() bool {
-	return len(tx.Txin) == 1 && len(tx.Txin[0].Txid) == 0 && tx.Txin[0].TxoutIdx == -1
+	return len(tx.Vin) == 1 && len(tx.Vin[0].Txid) == 0 && tx.Vin[0].TxoutIdx == -1
 }

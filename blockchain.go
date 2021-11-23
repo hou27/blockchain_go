@@ -205,7 +205,7 @@ func (bc *Blockchain) FindUnspentTxs(publicKeyHash []byte) []*Transaction {
 			txID := hex.EncodeToString(tx.ID)
 
 		Outputs:
-			for outIndex, out := range tx.Txout {
+			for outIndex, out := range tx.Vout {
 				// Was the output spent?
 				if spentTXOs[txID] != nil {
 					for _, spentOut := range spentTXOs[txID] {
@@ -222,7 +222,7 @@ func (bc *Blockchain) FindUnspentTxs(publicKeyHash []byte) []*Transaction {
 			}
 			
 			if tx.IsCoinbase() == false {
-				for _, in := range tx.Txin {
+				for _, in := range tx.Vin {
 					if in.Unlock(publicKeyHash) {
 						inTxID := hex.EncodeToString(in.Txid)
 						spentTXOs[inTxID] = append(spentTXOs[inTxID], in.TxoutIdx)
@@ -248,7 +248,7 @@ Work:
 	for _, tx := range unspentTXs {
 		txID := hex.EncodeToString(tx.ID)
 		
-		for index, txout := range tx.Txout {
+		for index, txout := range tx.Vout {
 			if txout.IsLockedWithKey(publicKeyHash) && accumulated < amount {
 				accumulated += txout.Value
 				unspentOutputs[txID] = append(unspentOutputs[txID], index)

@@ -155,7 +155,7 @@ func (cli *Cli) getBalance(address string) {
 	utxs := bc.FindUnspentTxs(publicKeyHash)
 
 	for _, tx := range utxs {
-		for _, out := range tx.Txout {
+		for _, out := range tx.Vout {
 			if out.IsLockedWithKey(publicKeyHash) {
 				balance += out.Value
 			}
