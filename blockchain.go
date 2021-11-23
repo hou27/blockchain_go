@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/boltdb/bolt"
 	"github.com/go-playground/validator"
@@ -38,8 +39,60 @@ func (bc *Blockchain) validateStructure(newBlock Block) error {
 	return nil
 }
 
+func dbExists() bool {
+	dbFile := fmt.Sprintf(dbFile, "0600")
+	if _, err := os.Stat(dbFile); os.IsNotExist(err) {
+		return false
+	}
+
+	return true
+}
+
+// Creates a new blockchain
+func CreateBlockchain(address string) *Blockchain {
+	if dbExists() {
+		fmt.Println("Blockchain already exists.")
+		os.Exit(1)
+	}
+	var last []byte
+	dbFile := fmt.Sprintf(dbFile, "0600")
+	db, err := bolt.Open(dbFile, 0600, nil)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	err = db.Update(func(tx *bolt.Tx) error {
+		cb := NewCoinbaseTX(address, "init base")
+		genesis := GenerateGenesis(cb)
+		b, err := tx.CreateBucket([]byte("blocks"))
+		if err != nil {
+			return err
+		}
+		err = b.Put(genesis.Hash, genesis.Serialize())
+		if err != nil {
+			return err
+		}
+		err = b.Put([]byte("last"), genesis.Hash)
+		if err != nil {
+			return err
+		}
+		last = genesis.Hash
+		return nil
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	bc := Blockchain{db, last}
+    return &bc
+}
+
 // Get All Blockchains
 func GetBlockchain(address string) *Blockchain {
+	if dbExists() == false {
+		fmt.Println("There's no blockchain yet. Create one first.")
+		os.Exit(1)
+	}
 	var last []byte
 
 	dbFile := fmt.Sprintf(dbFile, "0600")
@@ -47,28 +100,11 @@ func GetBlockchain(address string) *Blockchain {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// defer db.Close()
+
 	err = db.Update(func(tx *bolt.Tx) error {
 		bc := tx.Bucket([]byte("blocks"))
-		if bc == nil {
-			cb := NewCoinbaseTX(address, "init base")
-			genesis := GenerateGenesis(cb)
-			b, err := tx.CreateBucket([]byte("blocks"))
-			if err != nil {
-				log.Fatal(err)
-			}
-			err = b.Put(genesis.Hash, genesis.Serialize())
-			if err != nil {
-				log.Fatal(err)
-			}
-			err = b.Put([]byte("last"), genesis.Hash)
-			if err != nil {
-				log.Fatal(err)
-			}
-			last = genesis.Hash
-		} else {
-			last = bc.Get([]byte("last"))
-		}
+		last = bc.Get([]byte("last"))
+
 		return nil
 	})
 	if err != nil {

@@ -21,6 +21,7 @@ func (cli *Cli) Active() {
 		os.Exit(1)
 	}
 	sendCmd := flag.NewFlagSet("send", flag.ExitOnError)
+	createBlockchainCmd := flag.NewFlagSet("createblockchain", flag.ExitOnError)
 	showBlocksCmd := flag.NewFlagSet("showblocks", flag.ExitOnError)
 	getBalanceCmd := flag.NewFlagSet("getbalance", flag.ExitOnError)
 	createWalletCmd := flag.NewFlagSet("createwallet", flag.ExitOnError)
@@ -29,11 +30,17 @@ func (cli *Cli) Active() {
 	sendFrom := sendCmd.String("from", "", "Source address")
 	sendTo := sendCmd.String("to", "", "Destination address")
 	sendAmount := sendCmd.Int("amount", 0, "Amount to send")
+	createBlockchainAddr := createBlockchainCmd.String("address", "", "First Miner's address")
 	getBalanceAddress := getBalanceCmd.String("address", "", "The address to get balance for")
 
 	switch os.Args[1] {
 	case "send":
 		err := sendCmd.Parse(os.Args[2:])
+		if err != nil {
+			log.Panic(err)
+		}
+	case "createblockchain":
+		err := createBlockchainCmd.Parse(os.Args[2:])
 		if err != nil {
 			log.Panic(err)
 		}
@@ -70,6 +77,14 @@ func (cli *Cli) Active() {
 		cli.send(*sendFrom, *sendTo, *sendAmount)
 	}
 
+	if createBlockchainCmd.Parsed() {
+		if *createBlockchainAddr == "" {
+			createBlockchainCmd.Usage()
+			os.Exit(1)
+		}
+		cli.createBlockchain(*createBlockchainAddr)
+	}
+
 	if showBlocksCmd.Parsed() {
 		cli.showBlocks()
 	}
@@ -89,6 +104,12 @@ func (cli *Cli) Active() {
 	if showAddrsCmd.Parsed() {
 		cli.showAddresses()
 	}
+}
+
+func (cli *Cli) createBlockchain(address string) {
+	newBc := CreateBlockchain(address)
+	newBc.db.Close()
+	fmt.Println("Successfully done with create blockchain!")
 }
 
 func (cli *Cli) createWallet() {
@@ -167,6 +188,7 @@ func (cli *Cli) showBlocks() {
 func (cli *Cli) printUsage() {
 	fmt.Printf("How to use:\n\n")
 	fmt.Println("  send -from FROM -to TO -amount AMOUNT - send AMOUNT of coins from FROM address to TO")
+	fmt.Println("  createblockchain -address ADDRESS - create new blockchain")
 	fmt.Println("  showblocks - print all the blocks of the blockchain")
 	fmt.Println("  getbalance -address ADDRESS - Get balance of ADDRESS")
 	fmt.Println("  createwallet - Create your Wallet")
