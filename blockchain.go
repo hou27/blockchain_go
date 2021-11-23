@@ -206,7 +206,6 @@ func (bc *Blockchain) FindUnspentTxs(publicKeyHash []byte) []*Transaction {
 
 		Outputs:
 			for outIndex, out := range tx.Vout {
-				// Was the output spent?
 				if spentTXOs[txID] != nil {
 					for _, spentOut := range spentTXOs[txID] {
 						if spentOut == outIndex {

@@ -23,13 +23,13 @@ type Transaction struct {
 type TXInput struct {
 	Txid		[]byte
 	TxoutIdx	int
-	ScriptSig	[]byte // Unlock script
+	ScriptSig	[]byte // Unlock script 다른 사람으로부터 받은 UTXO를 사용하기 위해 잠금 해제하는 스크립트
 }
 
 // Transaction output
 type TXOutput struct {
 	Value        int
-	ScriptPubKey []byte // Lock script
+	ScriptPubKey []byte // Lock script 수신자 이외에 그 누구도 열지 못하도록 잠그는 스크립트
 }
 
 // Sets ID of a transaction
