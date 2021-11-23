@@ -2,6 +2,8 @@ package main
 
 import (
 	"bytes"
+	"crypto/ecdsa"
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/gob"
 	"encoding/hex"
@@ -32,7 +34,7 @@ type TXOutput struct {
 	ScriptPubKey []byte // Lock script 수신자 이외에 그 누구도 열지 못하도록 잠그는 스크립트
 }
 
-// Sets ID of a transaction
+// Returns the hash of the Transaction to use it as an ID.
 func (tx *Transaction) SetID() {
 	var encoded bytes.Buffer
 	var hash [32]byte
@@ -129,4 +131,48 @@ func NewUTXOTransaction(from, to string, amount int, bc *Blockchain) *Transactio
 // Checks whether the transaction is coinbase
 func (tx Transaction) IsCoinbase() bool {
 	return len(tx.Vin) == 1 && len(tx.Vin[0].Txid) == 0 && tx.Vin[0].TxoutIdx == -1
+}
+
+// Creates a abbreviated copy of Transaction to use in sign
+func (tx *Transaction) AbbreviatedCopy() Transaction {
+	var inputs []TXInput
+
+	// The public key stored in the input doesn't need to be signed.
+	for _, vin := range tx.Vin {
+		inputs = append(inputs, TXInput{vin.Txid, vin.TxoutIdx, nil})
+	}
+
+	abbreviatedTx := Transaction{tx.ID, inputs, tx.Vout}
+
+	return abbreviatedTx
+}
+
+// Signs each input of a Transaction
+func (tx *Transaction) Sign(privKey ecdsa.PrivateKey, prevTx *Transaction) {
+	if tx.IsCoinbase() {
+		return
+	}
+
+	for _, vin := range tx.Vin {
+		if bytes.Compare(vin.Txid, prevTx.ID) != 0 {
+			log.Panic("It's not the previous Transaction.")
+		}
+	}
+
+	abbreviatedTx := tx.AbbreviatedCopy()
+
+	for inId, vin := range abbreviatedTx.Vin {
+		abbreviatedTx.Vin[inId].ScriptSig = prevTx.Vout[vin.TxoutIdx].ScriptPubKey
+		abbreviatedTx.SetID()
+		abbreviatedTx.Vin[inId].ScriptSig = nil
+
+		// Use ECDSA(not RSA)
+		r, s, err := ecdsa.Sign(rand.Reader, &privKey, abbreviatedTx.ID)
+		if err != nil {
+			log.Panic(err)
+		}
+		signature := append(r.Bytes(), s.Bytes()...)
+
+		tx.Vin[inId].ScriptSig = append(signature, tx.Vin[inId].ScriptSig...)
+	}
 }
