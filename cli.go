@@ -100,24 +100,10 @@ func (cli *Cli) Active() {
 	if createWalletCmd.Parsed() {
 		cli.createWallet()
 	}
-
+	
 	if showAddrsCmd.Parsed() {
 		cli.showAddresses()
 	}
-}
-
-func (cli *Cli) createBlockchain(address string) {
-	newBc := CreateBlockchain(address)
-	newBc.db.Close()
-	fmt.Println("Successfully done with create blockchain!")
-}
-
-func (cli *Cli) createWallet() {
-	wallets, _ := NewWallets()
-	address := wallets.CreateWallet()
-	wallets.SaveToFile()
-
-	fmt.Printf("Your new address: %s\n", address)
 }
 
 func (cli *Cli) send(from, to string, amount int) {
@@ -128,12 +114,40 @@ func (cli *Cli) send(from, to string, amount int) {
 	fmt.Println("Send Complete!!")
 }
 
+func (cli *Cli) createBlockchain(address string) {
+	newBc := CreateBlockchain(address)
+	newBc.db.Close()
+	fmt.Println("Successfully done with create blockchain!")
+}
+
+// Show Blockchains
+func (cli *Cli) showBlocks() {
+	bc := GetBlockchain("")
+	defer bc.db.Close()
+	bcI := bc.Iterator()
+	for {
+		block := bcI.getNextBlock()
+		pow := NewProofOfWork(block)
+
+		fmt.Println("\nTimeStamp:", block.TimeStamp)
+		fmt.Printf("Data: %v\n", block.Transactions[0])
+		fmt.Printf("Hash: %x\n", block.Hash)
+		fmt.Printf("Prev Hash: %x\n", block.PrevHash)
+		fmt.Printf("Nonce: %d\n", block.Nonce)
+		fmt.Printf("is Validated: %s\n", strconv.FormatBool(pow.Validate()))
+
+		if len(block.PrevHash) == 0 {
+			break
+		}
+	}
+}
+
 func (cli *Cli) getBalance(address string) {
 	bc := GetBlockchain(address)
 	defer bc.db.Close()
-
+	
 	balance := 0
-
+	
 	publicKeyHash, _, err := base58.CheckDecode(address)
 	if err != nil {
 		log.Panic(err)
@@ -151,6 +165,14 @@ func (cli *Cli) getBalance(address string) {
 	fmt.Printf("Balance of '%s': %d\n", address, balance)
 }
 
+func (cli *Cli) createWallet() {
+	wallets, _ := NewWallets()
+	address := wallets.CreateWallet()
+	wallets.SaveToFile()
+	
+	fmt.Printf("Your new address: %s\n", address)
+}
+
 func (cli *Cli) showAddresses() {
 	wallets, err := NewWallets()
 	if err != nil {
@@ -160,28 +182,6 @@ func (cli *Cli) showAddresses() {
 
 	for _, address := range addresses {
 		fmt.Println(address)
-	}
-}
-
-// Show Blockchains
-func (cli *Cli) showBlocks() {
-	bc := GetBlockchain("")
-	defer bc.db.Close()
-	bcI := bc.Iterator()
-	for {
-		block := bcI.getNextBlock()
-		pow := NewProofOfWork(block)
-
-		fmt.Println("\nTimeStamp:", block.TimeStamp)
-		fmt.Printf("Data: %v\n", block.Transactions[0])
-        fmt.Printf("Hash: %x\n", block.Hash)
-		fmt.Printf("Prev Hash: %x\n", block.PrevHash)
-		fmt.Printf("Nonce: %d\n", block.Nonce)
-		fmt.Printf("is Validated: %s\n", strconv.FormatBool(pow.Validate()))
-
-		if len(block.PrevHash) == 0 {
-			break
-		}
 	}
 }
 
