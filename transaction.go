@@ -213,13 +213,16 @@ func (tx *Transaction) Verify(prevTx *Transaction) bool {
 		abbreviatedTx.Vin[inID].ScriptSig.PublicKey = nil
 
 		sigLen := len(vin.ScriptSig.Signature)
+		keyLen := len(vin.ScriptSig.PublicKey)
 
 		var r, s big.Int
 		var x, y big.Int
+
+		// Signature is a pair of numbers.
 		r.SetBytes(vin.ScriptSig.Signature[:(sigLen / 2)])
 		s.SetBytes(vin.ScriptSig.Signature[(sigLen / 2):])
-
-		keyLen := len(vin.ScriptSig.PublicKey)
+		
+		// PublicKey is a pair of coordinates.
 		x.SetBytes(vin.ScriptSig.PublicKey[:(keyLen / 2)])
 		y.SetBytes(vin.ScriptSig.PublicKey[(keyLen / 2):])
 
