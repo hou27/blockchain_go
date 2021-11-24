@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -259,4 +260,21 @@ Work:
 	}
 	
 	return accumulated, unspentOutputs
+}
+
+// Get transaction
+func (bc *Blockchain) GetTransaction(id []byte) (Transaction, error) {
+	bcI := bc.Iterator()
+	for {
+		block := bcI.getNextBlock()
+		for _, tx := range block.Transactions {
+			if bytes.Compare(tx.ID, id) == 0 {
+					return *tx, nil
+			}
+		}
+		if len(block.PrevHash) == 0 {
+			break
+		}
+	}
+	return Transaction{}, errors.New("Transaction not found")
 }
