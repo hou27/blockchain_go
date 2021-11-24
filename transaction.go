@@ -21,11 +21,16 @@ type Transaction struct {
 	Vout	[]TXOutput
 }
 
+type ScriptSig struct {
+	Signature	[]byte
+    PublicKey	[]byte
+}
+
 // Transaction input
 type TXInput struct {
 	Txid		[]byte
 	TxoutIdx	int
-	ScriptSig	[]byte // Unlock script 다른 사람으로부터 받은 UTXO를 사용하기 위해 잠금 해제하는 스크립트
+	ScriptSig	*ScriptSig // Unlock script 다른 사람으로부터 받은 UTXO를 사용하기 위해 잠금 해제하는 스크립트
 }
 
 // Transaction output
@@ -51,7 +56,15 @@ func (tx *Transaction) SetID() {
 
 // Unlock Tx
 func (tI TXInput) Unlock(publicKeyHash []byte) bool {
-	lockingHash := HashPublicKey(tI.ScriptSig)
+	var buf bytes.Buffer
+
+	encoder := gob.NewEncoder(&buf)
+	err := encoder.Encode(tI.ScriptSig)
+	if err != nil {
+		log.Fatal("Encode Error:", err)
+	}
+
+	lockingHash := HashPublicKey(buf.Bytes())
 
 	return bytes.Compare(lockingHash, publicKeyHash) == 0
 }
@@ -80,7 +93,7 @@ func NewTXOutput(value int, address string) *TXOutput {
 
 // Creates a new coinbase transaction
 func NewCoinbaseTX(to, data string) *Transaction {
-	txin := TXInput{[]byte{}, -1, []byte(data)}
+	txin := TXInput{[]byte{}, -1, &ScriptSig{nil, []byte(data)}}
 	txout := *NewTXOutput(subsidy, to)
 	tx := Transaction{nil, []TXInput{txin}, []TXOutput{txout}}
 
@@ -111,7 +124,7 @@ func NewUTXOTransaction(from, to string, amount int, bc *Blockchain) *Transactio
 			if err != nil {
 				log.Panic(err)
 			}
-			input := TXInput{txID, out, wallet.PublicKey}
+			input := TXInput{txID, out, &ScriptSig{nil, wallet.PublicKey}}
 			inputs = append(inputs, input)
 		}
 	}
@@ -162,9 +175,9 @@ func (tx *Transaction) Sign(privKey ecdsa.PrivateKey, prevTx *Transaction) {
 	abbreviatedTx := tx.AbbreviatedCopy()
 
 	for inId, vin := range abbreviatedTx.Vin {
-		abbreviatedTx.Vin[inId].ScriptSig = prevTx.Vout[vin.TxoutIdx].ScriptPubKey
+		abbreviatedTx.Vin[inId].ScriptSig.PublicKey = prevTx.Vout[vin.TxoutIdx].ScriptPubKey
 		abbreviatedTx.SetID()
-		abbreviatedTx.Vin[inId].ScriptSig = nil
+		abbreviatedTx.Vin[inId].ScriptSig.PublicKey = nil
 
 		// Use ECDSA(not RSA)
 		r, s, err := ecdsa.Sign(rand.Reader, &privKey, abbreviatedTx.ID)
@@ -173,6 +186,6 @@ func (tx *Transaction) Sign(privKey ecdsa.PrivateKey, prevTx *Transaction) {
 		}
 		signature := append(r.Bytes(), s.Bytes()...)
 
-		tx.Vin[inId].ScriptSig = append(signature, tx.Vin[inId].ScriptSig...)
+		tx.Vin[inId].ScriptSig.Signature = signature
 	}
 }
