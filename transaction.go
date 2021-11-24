@@ -139,6 +139,7 @@ func NewUTXOTransaction(from, to string, amount int, bc *Blockchain) *Transactio
 
 	tx := Transaction{nil, inputs, outputs}
 	tx.SetID()
+	bc.SignTransaction(&tx, wallet.PrivateKey)
 	
 	return &tx
 }

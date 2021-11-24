@@ -134,6 +134,12 @@ func GetBlockchain(address string) *Blockchain {
 func (bc *Blockchain) AddBlock(transactions []*Transaction) {
 	var lastHash []byte
 
+	for _, tx := range transactions {
+		if bc.VerifyTransaction(tx) != true {
+			log.Panic("!!Invalid transaction!!")
+		}
+	}
+
 	err := bc.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("blocks"))
 		lastHash = b.Get([]byte("last"))
@@ -280,9 +286,7 @@ func (bc *Blockchain) GetTransaction(id []byte) (Transaction, error) {
 	return Transaction{}, errors.New("Transaction not found")
 }
 
-///// down here, they are not commit yet.
-
-// SignTransaction signs inputs of a Transaction
+// Signs inputs of a Transaction
 func (bc *Blockchain) SignTransaction(tx *Transaction, privKey ecdsa.PrivateKey) {
 	for _, vin := range tx.Vin {
 		prevTX, err := bc.GetTransaction(vin.Txid)
@@ -293,7 +297,7 @@ func (bc *Blockchain) SignTransaction(tx *Transaction, privKey ecdsa.PrivateKey)
 	}
 }
 
-// VerifyTransaction verifies transaction input signatures
+// Verifies transaction input signatures
 func (bc *Blockchain) VerifyTransaction(tx *Transaction) bool {
 	if tx.IsCoinbase() {
 		return true
