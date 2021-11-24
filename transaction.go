@@ -3,11 +3,13 @@ package main
 import (
 	"bytes"
 	"crypto/ecdsa"
+	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/gob"
 	"encoding/hex"
 	"log"
+	"math/big"
 
 	"github.com/btcsuite/btcutil/base58"
 )
@@ -188,4 +190,43 @@ func (tx *Transaction) Sign(privKey ecdsa.PrivateKey, prevTx *Transaction) {
 
 		tx.Vin[inId].ScriptSig.Signature = signature
 	}
+}
+
+// Verifies signatures of Transaction inputs
+func (tx *Transaction) Verify(prevTx *Transaction) bool {
+	if tx.IsCoinbase() {
+		return true
+	}
+
+	for _, vin := range tx.Vin {
+		if bytes.Compare(vin.Txid, prevTx.ID) != 0 {
+			log.Panic("It's not the previous Transaction.")
+		}
+	}
+
+	abbreviatedTx := tx.AbbreviatedCopy()
+	curve := elliptic.P256() // 키 쌍을 생성할 때 사용된 것과 동일한 곡선
+
+	for inID, vin := range tx.Vin {
+		abbreviatedTx.Vin[inID].ScriptSig.PublicKey = prevTx.Vout[vin.TxoutIdx].ScriptPubKey
+		abbreviatedTx.SetID()
+		abbreviatedTx.Vin[inID].ScriptSig.PublicKey = nil
+
+		sigLen := len(vin.ScriptSig.Signature)
+
+		var r, s big.Int
+		var x, y big.Int
+		r.SetBytes(vin.ScriptSig.Signature[:(sigLen / 2)])
+		s.SetBytes(vin.ScriptSig.Signature[(sigLen / 2):])
+
+		keyLen := len(vin.ScriptSig.PublicKey)
+		x.SetBytes(vin.ScriptSig.PublicKey[:(keyLen / 2)])
+		y.SetBytes(vin.ScriptSig.PublicKey[(keyLen / 2):])
+
+		rawPublicKey := &ecdsa.PublicKey{curve, &x, &y}
+		if ecdsa.Verify(rawPublicKey, abbreviatedTx.ID, &r, &s) == false {
+			return false
+		}
+	}
+	return true
 }
