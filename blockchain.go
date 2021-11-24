@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"crypto/ecdsa"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -277,4 +278,36 @@ func (bc *Blockchain) GetTransaction(id []byte) (Transaction, error) {
 		}
 	}
 	return Transaction{}, errors.New("Transaction not found")
+}
+
+///// down here, they are not commit yet.
+
+// SignTransaction signs inputs of a Transaction
+func (bc *Blockchain) SignTransaction(tx *Transaction, privKey ecdsa.PrivateKey) {
+	for _, vin := range tx.Vin {
+		prevTX, err := bc.GetTransaction(vin.Txid)
+		if err != nil {
+			log.Panic(err)
+		}
+		tx.Sign(privKey, &prevTX)
+	}
+}
+
+// VerifyTransaction verifies transaction input signatures
+func (bc *Blockchain) VerifyTransaction(tx *Transaction) bool {
+	if tx.IsCoinbase() {
+		return true
+	}
+
+	var isVerified bool
+
+	for _, vin := range tx.Vin {
+		prevTX, err := bc.GetTransaction(vin.Txid)
+		if err != nil {
+			log.Panic(err)
+		}
+		isVerified = tx.Verify(&prevTX)
+	}
+
+	return isVerified
 }
