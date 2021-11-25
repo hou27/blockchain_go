@@ -178,6 +178,7 @@ func (tx *Transaction) Sign(privKey ecdsa.PrivateKey, prevTx *Transaction) {
 	abbreviatedTx := tx.AbbreviatedCopy()
 
 	for inId, vin := range abbreviatedTx.Vin {
+		abbreviatedTx.Vin[inId].ScriptSig = &ScriptSig{}
 		abbreviatedTx.Vin[inId].ScriptSig.PublicKey = prevTx.Vout[vin.TxoutIdx].ScriptPubKey
 		abbreviatedTx.SetID()
 		abbreviatedTx.Vin[inId].ScriptSig.PublicKey = nil
@@ -208,10 +209,11 @@ func (tx *Transaction) Verify(prevTx *Transaction) bool {
 	abbreviatedTx := tx.AbbreviatedCopy()
 	curve := elliptic.P256() // 키 쌍을 생성할 때 사용된 것과 동일한 곡선
 
-	for inID, vin := range tx.Vin {
-		abbreviatedTx.Vin[inID].ScriptSig.PublicKey = prevTx.Vout[vin.TxoutIdx].ScriptPubKey
+	for inId, vin := range tx.Vin {
+		abbreviatedTx.Vin[inId].ScriptSig = &ScriptSig{}
+		abbreviatedTx.Vin[inId].ScriptSig.PublicKey = prevTx.Vout[vin.TxoutIdx].ScriptPubKey
 		abbreviatedTx.SetID()
-		abbreviatedTx.Vin[inID].ScriptSig.PublicKey = nil
+		abbreviatedTx.Vin[inId].ScriptSig.PublicKey = nil
 
 		sigLen := len(vin.ScriptSig.Signature)
 		keyLen := len(vin.ScriptSig.PublicKey)
