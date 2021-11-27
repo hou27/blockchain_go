@@ -130,7 +130,11 @@ func (cli *Cli) showBlocks() {
 		pow := NewProofOfWork(block)
 
 		fmt.Println("\nTimeStamp:", block.TimeStamp)
-		fmt.Printf("Data: %v\n", block.Transactions[0])
+		fmt.Println("Transactions: ")
+		fmt.Printf(" ID: %v\n", block.Transactions[0].ID)
+		fmt.Printf(" Vin: %v\n", block.Transactions[0].Vin[0])
+		fmt.Printf("    .ScriptSig: %v\n", block.Transactions[0].Vin[0].ScriptSig)
+		fmt.Printf(" Vout: %v\n", block.Transactions[0].Vout)
 		fmt.Printf("Hash: %x\n", block.Hash)
 		fmt.Printf("Prev Hash: %x\n", block.PrevHash)
 		fmt.Printf("Nonce: %d\n", block.Nonce)

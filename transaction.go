@@ -58,15 +58,7 @@ func (tx *Transaction) SetID() {
 
 // Unlock Tx
 func (tI TXInput) Unlock(publicKeyHash []byte) bool {
-	var buf bytes.Buffer
-
-	encoder := gob.NewEncoder(&buf)
-	err := encoder.Encode(tI.ScriptSig)
-	if err != nil {
-		log.Fatal("Encode Error:", err)
-	}
-
-	lockingHash := HashPublicKey(buf.Bytes())
+	lockingHash := HashPublicKey(tI.ScriptSig.PublicKey)
 
 	return bytes.Compare(lockingHash, publicKeyHash) == 0
 }
