@@ -103,7 +103,7 @@ func CreateBlockchain(address string) *Blockchain {
 }
 
 // Get All Blockchains
-func GetBlockchain(address string) *Blockchain {
+func GetBlockchain() *Blockchain {
 	if dbExists() == false {
 		fmt.Println("There's no blockchain yet. Create one first.")
 		os.Exit(1)

@@ -107,7 +107,7 @@ func (cli *Cli) Active() {
 }
 
 func (cli *Cli) send(from, to string, amount int) {
-	bc := GetBlockchain(from)
+	bc := GetBlockchain()
 	defer bc.db.Close()
 	tx := NewUTXOTransaction(from, to, amount, bc)
 	rwTx := NewCoinbaseTX(from, "Mining reward")
@@ -123,7 +123,7 @@ func (cli *Cli) createBlockchain(address string) {
 
 // Show Blockchains
 func (cli *Cli) showBlocks() {
-	bc := GetBlockchain("")
+	bc := GetBlockchain()
 	defer bc.db.Close()
 	bcI := bc.Iterator()
 	for {
@@ -150,7 +150,7 @@ func (cli *Cli) showBlocks() {
 }
 
 func (cli *Cli) getBalance(address string) {
-	bc := GetBlockchain(address)
+	bc := GetBlockchain()
 	defer bc.db.Close()
 	
 	balance := 0
