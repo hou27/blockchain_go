@@ -110,7 +110,8 @@ func (cli *Cli) send(from, to string, amount int) {
 	bc := GetBlockchain(from)
 	defer bc.db.Close()
 	tx := NewUTXOTransaction(from, to, amount, bc)
-	bc.AddBlock([]*Transaction{tx})
+	rwTx := NewCoinbaseTX(from, "Mining reward")
+	bc.AddBlock([]*Transaction{rwTx, tx})
 	fmt.Println("Send Complete!!")
 }
 
