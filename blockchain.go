@@ -245,7 +245,7 @@ func (bc *Blockchain) FindUnspentTxs(publicKeyHash []byte) []*Transaction {
 	return unspentTXs
 }
 
-// Finds and returns unspend transaction outputs for the address
+// Finds unspend transaction outputs for the address
 func (bc *Blockchain) FindUTXOs(publicKeyHash []byte, amount int) (int, map[string][]int) {
 	unspentOutputs := make(map[string][]int)
 	unspentTXs := bc.FindUnspentTxs(publicKeyHash)
@@ -267,6 +267,47 @@ Work:
 	}
 	
 	return accumulated, unspentOutputs
+}
+
+// Finds all unspent transaction outputs
+func (bc *Blockchain) FindAllUTXOs() map[string]TXOutput {
+	UTXO := make(map[string]TXOutput)
+	spentTXOs := make(map[string][]int)
+	bcI := bc.Iterator()
+
+	for {
+		block := bcI.getNextBlock()
+
+		for _, tx := range block.Transactions {
+			txID := hex.EncodeToString(tx.ID)
+
+		Outputs:
+			for outIndex, out := range tx.Vout {
+				if spentTXOs[txID] != nil {
+					for _, spentOut := range spentTXOs[txID] {
+						if spentOut == outIndex {
+							continue Outputs
+						}
+					}
+				}
+
+				UTXO[txID] = out
+			}
+
+			if tx.IsCoinbase() == false {
+				for _, in := range tx.Vin {
+					inTxID := hex.EncodeToString(in.Txid)
+					spentTXOs[inTxID] = append(spentTXOs[inTxID], in.TxoutIdx)
+				}
+			}
+		}
+
+		if len(block.PrevHash) == 0 {
+			break
+		}
+	}
+
+	return UTXO
 }
 
 // Get transaction
