@@ -1,8 +1,6 @@
 package main
 
 import (
-	"bytes"
-	"encoding/gob"
 	"encoding/hex"
 	"log"
 
@@ -57,16 +55,8 @@ func (u UTXOSet) Build(bc *Blockchain) {
 			if err != nil {
 				log.Panic(err)
 			}
-
-			var writer bytes.Buffer
-
-			enc := gob.NewEncoder(&writer)
-			err = enc.Encode(outs)
-			if err != nil {
-				log.Panic(err)
-			}
 			
-			err = b.Put(key, writer.Bytes())
+			err = b.Put(key, SerializeTxs(outs))
 			if err != nil {
 				log.Panic(err)
 			}
