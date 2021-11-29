@@ -43,15 +43,15 @@ type TXOutput struct {
 
 // Returns the hash of the Transaction to use it as an ID.
 func (tx *Transaction) SetID() {
-	var encoded bytes.Buffer
+	var writer bytes.Buffer
 	var hash [32]byte
 
-	enc := gob.NewEncoder(&encoded)
+	enc := gob.NewEncoder(&writer)
 	err := enc.Encode(tx)
 	if err != nil {
 		log.Panic(err)
 	}
-	hash = sha256.Sum256(encoded.Bytes())
+	hash = sha256.Sum256(writer.Bytes())
 	
 	tx.ID = hash[:]
 }
