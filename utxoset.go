@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding/gob"
 	"encoding/hex"
-	"fmt"
 	"log"
 
 	"github.com/boltdb/bolt"
 )
+
+const utxoBucket = "chainstate"
 
 // UTXOSet represents UTXO set
 type UTXOSet struct {
@@ -38,14 +39,10 @@ func (u UTXOSet) init(db *bolt.DB, bucketName []byte) error {
 
 // Builds the UTXO set
 func (u UTXOSet) Build(bc *Blockchain) {
-	dbFile := fmt.Sprintf(dbFile, "0600")
-	db, err := bolt.Open(dbFile, 0600, nil)
-	if err != nil {
-		log.Panic(err)
-	}
+	db := u.Blockchain.db
 
-	bucketName := []byte("chainstate")
-	err = u.init(db, bucketName)
+	bucketName := []byte(utxoBucket)
+	err := u.init(db, bucketName)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -77,4 +74,32 @@ func (u UTXOSet) Build(bc *Blockchain) {
 
 		return nil
 	})
+}
+
+// Finds UTXO in chainstate
+func (u UTXOSet) FindUTXOs(pubKeyHash []byte) []TXOutput {
+	var UTXOs []TXOutput
+	db := u.Blockchain.db
+
+	err := db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(utxoBucket))
+
+		b.ForEach(func(k, v []byte) error {
+			outs := DeserializeTxs(v)
+
+			for _, out := range outs {
+				if out.IsLockedWithKey(pubKeyHash) {
+					UTXOs = append(UTXOs, out)
+				}
+			}
+			return nil
+		})
+
+		return nil
+	})
+	if err != nil {
+		log.Panic(err)
+	}
+
+	return UTXOs
 }

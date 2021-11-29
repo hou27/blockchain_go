@@ -228,3 +228,16 @@ func (tx *Transaction) Verify(prevTx *Transaction) bool {
 	}
 	return true
 }
+
+// Deserializes TXOutputs
+func DeserializeTxs(data []byte) []TXOutput {
+	var writer []TXOutput
+
+	dec := gob.NewDecoder(bytes.NewReader(data))
+	err := dec.Decode(&writer)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	return writer
+}
