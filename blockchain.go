@@ -270,8 +270,8 @@ Work:
 }
 
 // Finds all unspent transaction outputs
-func (bc *Blockchain) FindAllUTXOs() map[string]TXOutput {
-	UTXO := make(map[string]TXOutput)
+func (bc *Blockchain) FindAllUTXOs() map[string][]TXOutput {
+	UTXO := make(map[string][]TXOutput)
 	spentTXOs := make(map[string][]int)
 	bcI := bc.Iterator()
 
@@ -291,7 +291,7 @@ func (bc *Blockchain) FindAllUTXOs() map[string]TXOutput {
 					}
 				}
 
-				UTXO[txID] = out
+				UTXO[txID] = append(UTXO[txID], out)
 			}
 
 			if tx.IsCoinbase() == false {
