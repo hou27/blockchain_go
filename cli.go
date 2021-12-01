@@ -155,6 +155,7 @@ func (cli *Cli) showBlocks() {
 
 func (cli *Cli) getBalance(address string) {
 	bc := GetBlockchain()
+	UTXOSet := UTXOSet{bc}
 	defer bc.db.Close()
 	
 	balance := 0
@@ -163,14 +164,10 @@ func (cli *Cli) getBalance(address string) {
 	if err != nil {
 		log.Panic(err)
 	}
-	utxs := bc.FindUnspentTxs(publicKeyHash)
+	utxos := UTXOSet.FindUTXOs(publicKeyHash)
 
-	for _, tx := range utxs {
-		for _, out := range tx.Vout {
-			if out.IsLockedWithKey(publicKeyHash) {
-				balance += out.Value
-			}
-		}
+	for _, out := range utxos {
+		balance += out.Value
 	}
 
 	fmt.Printf("Balance of '%s': %d\n", address, balance)
