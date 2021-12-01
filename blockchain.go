@@ -290,7 +290,6 @@ func (bc *Blockchain) FindAllUTXOs() map[string][]TXOutput {
 						}
 					}
 				}
-
 				UTXO[txID] = append(UTXO[txID], out)
 			}
 

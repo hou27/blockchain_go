@@ -117,7 +117,6 @@ func (cli *Cli) send(from, to string, amount int) {
 
 func (cli *Cli) createBlockchain(address string) {
 	newBc := CreateBlockchain(address)
-	newBc.db.Close()
 	defer newBc.db.Close()
 
 	UTXOSet := UTXOSet{newBc}

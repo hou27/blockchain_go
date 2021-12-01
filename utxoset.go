@@ -50,13 +50,16 @@ func (u UTXOSet) Build() {
 	err = db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(bucketName)
 
-		for txId, outs := range UTXO {
-			key, err := hex.DecodeString(txId)
+		for txID, outs := range UTXO {
+			key, err := hex.DecodeString(txID)
 			if err != nil {
 				log.Panic(err)
 			}
-			
-			err = b.Put(key, SerializeTxs(outs))
+			if txID == "" {
+				err = b.Put([]byte("base"), SerializeTxs(outs))
+			} else {
+				err = b.Put(key, SerializeTxs(outs))
+			}
 			if err != nil {
 				log.Panic(err)
 			}
