@@ -36,7 +36,7 @@ func (u UTXOSet) init(db *bolt.DB, bucketName []byte) error {
 }
 
 // Builds the UTXO set
-func (u UTXOSet) Build(bc *Blockchain) {
+func (u UTXOSet) Build() {
 	db := u.Blockchain.db
 
 	bucketName := []byte(utxoBucket)
@@ -45,7 +45,7 @@ func (u UTXOSet) Build(bc *Blockchain) {
 		log.Panic(err)
 	}
 
-	UTXO := bc.FindAllUTXOs()
+	UTXO := u.Blockchain.FindAllUTXOs()
 
 	err = db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(bucketName)
