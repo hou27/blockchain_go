@@ -93,3 +93,55 @@ func (u UTXOSet) FindUTXOs(pubKeyHash []byte) []TXOutput {
 
 	return UTXOs
 }
+
+// Updates the UTXO set(Add new UTXO && Remove used UTXO)
+func (u UTXOSet) Update(block *Block) {
+	db := u.Blockchain.db
+
+	db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(utxoBucket))
+
+		for _, tx := range block.Transactions {
+			if tx.IsCoinbase() == false {
+				// Remove used UTXO
+				for _, vin := range tx.Vin {
+					var newOuts []TXOutput
+					data := b.Get(vin.Txid)
+					outs := DeserializeTxs(data)
+
+					for outIdx, out := range outs {
+						if outIdx != vin.TxoutIdx {
+							newOuts = append(newOuts, out)
+						}
+					}
+
+					if len(newOuts) == 0 {
+						err := b.Delete(vin.Txid)
+						if err != nil {
+							log.Panic(err)
+						}
+					} else {
+						// Save other UTXOs that still available
+						err := b.Put(vin.Txid, SerializeTxs(newOuts))
+						if err != nil {
+							log.Panic(err)
+						}
+					}
+				}
+			}
+
+			// Add new UTXO
+			var newOuts []TXOutput
+			for _, out := range tx.Vout {
+				newOuts = append(newOuts, out)
+			}
+
+			err := b.Put(tx.ID, SerializeTxs(newOuts))
+			if err != nil {
+				log.Panic(err)
+			}
+		}
+
+		return nil
+	})
+}
