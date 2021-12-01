@@ -55,6 +55,7 @@ func (u UTXOSet) Build() {
 			if err != nil {
 				log.Panic(err)
 			}
+			// temporary expedient
 			if txID == "" {
 				err = b.Put([]byte("base"), SerializeTxs(outs))
 			} else {
