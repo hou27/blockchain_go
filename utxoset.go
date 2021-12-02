@@ -144,3 +144,37 @@ func (u UTXOSet) Update(block *Block) {
 		return nil
 	})
 }
+
+// Finds unspend transaction outputs for the address
+func (u UTXOSet) FindMyUTXOs(publicKeyHash []byte, amount int) (int, map[string][]int) {
+	unspentOutputs := make(map[string][]int)
+	db := u.Blockchain.db
+	accumulated := 0
+
+	err := db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(utxoBucket))
+		
+		b.ForEach(func(k, v []byte) error {
+			txID := hex.EncodeToString(k)
+			outs := DeserializeTxs(v)
+		Work:
+			for index, txout := range outs {
+				if txout.IsLockedWithKey(publicKeyHash) && accumulated < amount {
+					accumulated += txout.Value
+					unspentOutputs[txID] = append(unspentOutputs[txID], index)
+				}
+				if accumulated >= amount {
+					break Work
+				}
+			}
+			return nil
+		})
+
+		return nil
+	})
+	if err != nil {
+		log.Panic(err)
+	}
+	
+	return accumulated, unspentOutputs
+}

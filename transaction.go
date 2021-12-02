@@ -96,7 +96,7 @@ func NewCoinbaseTX(to, data string) *Transaction {
 }
 
 // Creates a new transaction
-func NewUTXOTransaction(from, to string, amount int, bc *Blockchain) *Transaction {
+func NewUTXOTransaction(from, to string, amount int, UTXOSet *UTXOSet) *Transaction {
 	var inputs []TXInput
 	var outputs []TXOutput
 
@@ -106,7 +106,7 @@ func NewUTXOTransaction(from, to string, amount int, bc *Blockchain) *Transactio
 	}
 	wallet := wallets.GetWallet(from)
 	publicKeyHash := HashPublicKey(wallet.PublicKey)
-	balance, validOutputs := bc.FindUTXOs(publicKeyHash, amount)
+	balance, validOutputs := UTXOSet.FindMyUTXOs(publicKeyHash, amount)
 
 	if balance < amount {
 		log.Panic("ERROR: Not enough funds")
@@ -132,7 +132,7 @@ func NewUTXOTransaction(from, to string, amount int, bc *Blockchain) *Transactio
 
 	tx := Transaction{nil, inputs, outputs}
 	tx.SetID()
-	bc.SignTransaction(&tx, wallet.PrivateKey)
+	UTXOSet.Blockchain.SignTransaction(&tx, wallet.PrivateKey)
 	
 	return &tx
 }

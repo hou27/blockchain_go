@@ -109,9 +109,11 @@ func (cli *Cli) Active() {
 func (cli *Cli) send(from, to string, amount int) {
 	bc := GetBlockchain()
 	defer bc.db.Close()
-	tx := NewUTXOTransaction(from, to, amount, bc)
-	rwTx := NewCoinbaseTX(from, "Mining reward")
-	bc.AddBlock([]*Transaction{rwTx, tx})
+
+	UTXOSet := UTXOSet{bc}
+	tx := NewUTXOTransaction(from, to, amount, &UTXOSet)
+	rewardTx := NewCoinbaseTX(from, "Mining reward")
+	bc.AddBlock([]*Transaction{rewardTx, tx})
 	fmt.Println("Send Complete!!")
 }
 

@@ -245,30 +245,6 @@ func (bc *Blockchain) FindUnspentTxs(publicKeyHash []byte) []*Transaction {
 	return unspentTXs
 }
 
-// Finds unspend transaction outputs for the address
-func (bc *Blockchain) FindUTXOs(publicKeyHash []byte, amount int) (int, map[string][]int) {
-	unspentOutputs := make(map[string][]int)
-	unspentTXs := bc.FindUnspentTxs(publicKeyHash)
-	accumulated := 0
-
-Work:
-	for _, tx := range unspentTXs {
-		txID := hex.EncodeToString(tx.ID)
-		
-		for index, txout := range tx.Vout {
-			if txout.IsLockedWithKey(publicKeyHash) && accumulated < amount {
-				accumulated += txout.Value
-				unspentOutputs[txID] = append(unspentOutputs[txID], index)
-				if accumulated >= amount {
-					break Work
-				}
-			}
-		}
-	}
-	
-	return accumulated, unspentOutputs
-}
-
 // Finds all unspent transaction outputs
 func (bc *Blockchain) FindAllUTXOs() map[string][]TXOutput {
 	UTXO := make(map[string][]TXOutput)
