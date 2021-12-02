@@ -131,7 +131,7 @@ func GetBlockchain() *Blockchain {
 }
 
 // Add Blockchain
-func (bc *Blockchain) AddBlock(transactions []*Transaction) {
+func (bc *Blockchain) AddBlock(transactions []*Transaction) *Block {
 	var lastHash []byte
 
 	for _, tx := range transactions {
@@ -173,6 +173,8 @@ func (bc *Blockchain) AddBlock(transactions []*Transaction) {
 	if err != nil {
 		log.Panic(err)
 	}
+
+	return newBlock
 }
 
 // Blockchain iterator

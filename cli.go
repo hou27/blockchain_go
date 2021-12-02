@@ -113,7 +113,8 @@ func (cli *Cli) send(from, to string, amount int) {
 	UTXOSet := UTXOSet{bc}
 	tx := NewUTXOTransaction(from, to, amount, &UTXOSet)
 	rewardTx := NewCoinbaseTX(from, "Mining reward")
-	bc.AddBlock([]*Transaction{rewardTx, tx})
+	newBlock := bc.AddBlock([]*Transaction{rewardTx, tx})
+	UTXOSet.Update(newBlock)
 	fmt.Println("Send Complete!!")
 }
 
