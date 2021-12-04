@@ -10,7 +10,6 @@ import (
 	"os"
 
 	"github.com/boltdb/bolt"
-	"github.com/btcsuite/btcutil/base58"
 	"github.com/go-playground/validator"
 )
 
@@ -51,24 +50,13 @@ func dbExists() bool {
 	return true
 }
 
-func isValidWallet(address string) bool {
-	_, _, err := base58.CheckDecode(address)
-	if err != nil {
-		return false
-	}
-	return true
-}
-
 // Creates a new blockchain
 func CreateBlockchain(address string) *Blockchain {
 	if dbExists() {
 		fmt.Println("Blockchain already exists.")
 		os.Exit(1)
 	}
-	if isValidWallet(address) == false {
-		fmt.Println("Use correct wallet")
-		os.Exit(1)
-	}
+	
 	var last []byte
 	dbFile := fmt.Sprintf(dbFile, "0600")
 	db, err := bolt.Open(dbFile, 0600, nil)

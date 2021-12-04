@@ -132,3 +132,11 @@ func (ws *Wallets) GetAddresses() []string {
 func (ws Wallets) GetWallet(address string) Wallet {
 	return *ws.Wallets[address]
 }
+
+func IsValidWallet(address string) bool {
+	_, _, err := base58.CheckDecode(address)
+	if err != nil {
+		return false
+	}
+	return true
+}

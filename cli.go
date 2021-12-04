@@ -119,6 +119,10 @@ func (cli *Cli) send(from, to string, amount int) {
 }
 
 func (cli *Cli) createBlockchain(address string) {
+	if IsValidWallet(address) == false {
+		fmt.Println("Use correct wallet")
+		os.Exit(1)
+	}
 	newBc := CreateBlockchain(address)
 	defer newBc.db.Close()
 
