@@ -190,51 +190,6 @@ func (bcI *BlockchainIterator) getNextBlock() *Block {
 	return block
 }
 
-// Returns a list of transactions containing unspent outputs
-func (bc *Blockchain) FindUnspentTxs(publicKeyHash []byte) []*Transaction {
-	var unspentTXs []*Transaction
-	spentTXOs := make(map[string][]int)
-	bcI := bc.Iterator()
-
-	for {
-		block := bcI.getNextBlock()
-
-		for _, tx := range block.Transactions {
-			txID := hex.EncodeToString(tx.ID)
-
-		Outputs:
-			for outIndex, out := range tx.Vout {
-				if spentTXOs[txID] != nil {
-					for _, spentOut := range spentTXOs[txID] {
-						if spentOut == outIndex {
-							continue Outputs
-						}
-					}
-				}
-
-				if out.IsLockedWithKey(publicKeyHash) {
-					unspentTXs = append(unspentTXs, tx)
-					continue Outputs
-				}
-			}
-			
-			if tx.IsCoinbase() == false {
-				for _, in := range tx.Vin {
-					if in.Unlock(publicKeyHash) {
-						inTxID := hex.EncodeToString(in.Txid)
-						spentTXOs[inTxID] = append(spentTXOs[inTxID], in.TxoutIdx)
-					}
-				}
-			}
-		}
-
-		if len(block.PrevHash) == 0 {
-			break
-		}
-	}
-	return unspentTXs
-}
-
 // Finds all unspent transaction outputs
 func (bc *Blockchain) FindAllUTXOs() map[string][]TXOutput {
 	UTXO := make(map[string][]TXOutput)
