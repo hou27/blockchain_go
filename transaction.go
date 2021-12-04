@@ -200,7 +200,7 @@ func (tx *Transaction) Verify(prevTx *Transaction) bool {
 	}
 
 	abbreviatedTx := tx.AbbreviatedCopy()
-	curve := elliptic.P256() // 키 쌍을 생성할 때 사용된 것과 동일한 곡선
+	curve := elliptic.P256() // The same curve used to generate key pairs.
 
 	for inId, vin := range tx.Vin {
 		abbreviatedTx.Vin[inId].ScriptSig = &ScriptSig{}
