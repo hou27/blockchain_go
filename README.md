@@ -23,3 +23,4 @@ How to use:
 - Transactions
 - Addresses
 - UTXO Set
+- Merkle Tree
