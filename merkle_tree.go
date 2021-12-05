@@ -61,12 +61,12 @@ func NewMerkleNode(left, right *Node, data []byte) *Node {
 		hashes := append(left.Hash, right.Hash...)
 		hash := sha256.Sum256(hashes)
 		mNode.Hash = hash[:]
+		left.Parent = &mNode
+		right.Parent = &mNode
 	}
 
 	mNode.Left = left
 	mNode.Right = right
-	left.Parent = &mNode
-	right.Parent = &mNode
 
 	return &mNode
 }
