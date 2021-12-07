@@ -1,6 +1,6 @@
 # TODO
 
-- [ ] Implement blockchain network to peer to peer
+- [ ] Implement blockchain network P2P
 - [ ] Refactor functions
 
 ### Done ✓
