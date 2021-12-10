@@ -157,20 +157,22 @@ func (tx *Transaction) AbbreviatedCopy() Transaction {
 }
 
 // Signs each input of a Transaction
-func (tx *Transaction) Sign(privKey ecdsa.PrivateKey, prevTx *Transaction) {
+func (tx *Transaction) Sign(privKey ecdsa.PrivateKey, prevTXs map[string]Transaction) {
 	if tx.IsCoinbase() {
 		return
 	}
 
 	for _, vin := range tx.Vin {
-		if bytes.Compare(vin.Txid, prevTx.ID) != 0 {
-			log.Panic("It's not the previous Transaction.")
+		if prevTXs[hex.EncodeToString(vin.Txid)].ID == nil {
+			log.Panic("Error with Previous transaction")
 		}
 	}
 
 	abbreviatedTx := tx.AbbreviatedCopy()
 
 	for inId, vin := range abbreviatedTx.Vin {
+		prevTx := prevTXs[hex.EncodeToString(vin.Txid)]
+
 		abbreviatedTx.Vin[inId].ScriptSig = &ScriptSig{}
 		abbreviatedTx.Vin[inId].ScriptSig.PublicKey = prevTx.Vout[vin.TxoutIdx].ScriptPubKey
 		abbreviatedTx.SetID()
@@ -188,14 +190,14 @@ func (tx *Transaction) Sign(privKey ecdsa.PrivateKey, prevTx *Transaction) {
 }
 
 // Verifies signatures of Transaction inputs
-func (tx *Transaction) Verify(prevTx *Transaction) bool {
+func (tx *Transaction) Verify(prevTXs map[string]Transaction) bool {
 	if tx.IsCoinbase() {
 		return true
 	}
 
 	for _, vin := range tx.Vin {
-		if bytes.Compare(vin.Txid, prevTx.ID) != 0 {
-			log.Panic("It's not the previous Transaction.")
+		if prevTXs[hex.EncodeToString(vin.Txid)].ID == nil {
+			log.Panic("Error with Previous transaction")
 		}
 	}
 
@@ -203,6 +205,8 @@ func (tx *Transaction) Verify(prevTx *Transaction) bool {
 	curve := elliptic.P256() // The same curve used to generate key pairs.
 
 	for inId, vin := range tx.Vin {
+		prevTx := prevTXs[hex.EncodeToString(vin.Txid)]
+		
 		abbreviatedTx.Vin[inId].ScriptSig = &ScriptSig{}
 		abbreviatedTx.Vin[inId].ScriptSig.PublicKey = prevTx.Vout[vin.TxoutIdx].ScriptPubKey
 		abbreviatedTx.SetID()

@@ -249,13 +249,17 @@ func (bc *Blockchain) GetTransaction(id []byte) (Transaction, error) {
 
 // Signs inputs of a Transaction
 func (bc *Blockchain) SignTransaction(tx *Transaction, privKey ecdsa.PrivateKey) {
+	prevTXs := make(map[string]Transaction)
+
 	for _, vin := range tx.Vin {
 		prevTX, err := bc.GetTransaction(vin.Txid)
 		if err != nil {
 			log.Panic(err)
 		}
-		tx.Sign(privKey, &prevTX)
+		prevTXs[hex.EncodeToString(prevTX.ID)] = prevTX
 	}
+
+	tx.Sign(privKey, prevTXs)
 }
 
 // Verifies transaction input signatures
@@ -264,15 +268,15 @@ func (bc *Blockchain) VerifyTransaction(tx *Transaction) bool {
 		return true
 	}
 
-	var isVerified bool
+	prevTXs := make(map[string]Transaction)
 
 	for _, vin := range tx.Vin {
 		prevTX, err := bc.GetTransaction(vin.Txid)
 		if err != nil {
 			log.Panic(err)
 		}
-		isVerified = tx.Verify(&prevTX)
+		prevTXs[hex.EncodeToString(prevTX.ID)] = prevTX
 	}
 
-	return isVerified
+	return tx.Verify(prevTXs)
 }
