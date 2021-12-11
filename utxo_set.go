@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/hex"
-	"fmt"
 	"log"
 
 	"github.com/boltdb/bolt"
@@ -77,7 +76,6 @@ func (u UTXOSet) FindUTXOs(pubKeyHash []byte) []TXOutput {
 		b.ForEach(func(k, v []byte) error {
 			outs := DeserializeTxs(v)
 
-			fmt.Printf("%v\n", outs)
 			for _, out := range outs {
 				if out.IsLockedWithKey(pubKeyHash) {
 					UTXOs = append(UTXOs, out)

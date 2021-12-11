@@ -8,6 +8,7 @@ import (
 	"crypto/sha256"
 	"encoding/gob"
 	"encoding/hex"
+	"fmt"
 	"log"
 	"math/big"
 
@@ -87,6 +88,16 @@ func NewTXOutput(value int, address string) *TXOutput {
 
 // Creates a new coinbase transaction
 func NewCoinbaseTX(to, data string) *Transaction {
+	if data == "Mining reward" {
+		b := make([]byte, 10)
+		_, err := rand.Read(b)
+		if err != nil {
+			log.Panic(err)
+		}
+
+		data = fmt.Sprintf("%x", b)
+	}
+
 	txin := TXInput{[]byte{}, -1, &ScriptSig{nil, []byte(data)}}
 	txout := *NewTXOutput(subsidy, to)
 	tx := Transaction{nil, []TXInput{txin}, []TXOutput{txout}}
