@@ -22,7 +22,7 @@ func (cli *Cli) send(from, to string, amount int) {
 }
 
 func (cli *Cli) createBlockchain(address string) {
-	if IsValidWallet(address) == false {
+	if !IsValidWallet(address) {
 		fmt.Println("Use correct wallet")
 		os.Exit(1)
 	}
@@ -66,9 +66,9 @@ func (cli *Cli) getBalance(address string) {
 	bc := GetBlockchain()
 	UTXOSet := UTXOSet{bc}
 	defer bc.db.Close()
-	
+
 	balance := 0
-	
+
 	publicKeyHash, _, err := base58.CheckDecode(address)
 	if err != nil {
 		log.Panic(err)
@@ -86,7 +86,7 @@ func (cli *Cli) createWallet() {
 	wallets, _ := NewWallets()
 	address := wallets.CreateWallet()
 	wallets.SaveToFile()
-	
+
 	fmt.Printf("Your new address: %s\n", address)
 }
 

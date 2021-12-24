@@ -6,9 +6,7 @@ import (
 	"os"
 )
 
-type Cli struct {
-	bc *Blockchain
-}
+type Cli struct{}
 
 // Run CLI
 func (cli *Cli) Active() {
@@ -96,7 +94,7 @@ func (cli *Cli) Active() {
 	if createWalletCmd.Parsed() {
 		cli.createWallet()
 	}
-	
+
 	if showAddrsCmd.Parsed() {
 		cli.showAddresses()
 	}

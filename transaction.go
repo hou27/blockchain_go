@@ -19,21 +19,21 @@ const subsidy = 10
 
 // Coin transaction
 type Transaction struct {
-	ID		[]byte
-	Vin		[]TXInput
-	Vout	[]TXOutput
+	ID   []byte
+	Vin  []TXInput
+	Vout []TXOutput
 }
 
 type ScriptSig struct {
-	Signature	[]byte
-    PublicKey	[]byte
+	Signature []byte
+	PublicKey []byte
 }
 
 // Transaction input
 type TXInput struct {
-	Txid		[]byte
-	TxoutIdx	int
-	ScriptSig	*ScriptSig // Unlock script 다른 사람으로부터 받은 UTXO를 사용하기 위해 잠금 해제하는 스크립트
+	Txid      []byte
+	TxoutIdx  int
+	ScriptSig *ScriptSig // Unlock script 다른 사람으로부터 받은 UTXO를 사용하기 위해 잠금 해제하는 스크립트
 }
 
 // Transaction output
@@ -53,7 +53,7 @@ func (tx *Transaction) SetID() {
 		log.Panic(err)
 	}
 	hash = sha256.Sum256(writer.Bytes())
-	
+
 	tx.ID = hash[:]
 }
 
@@ -61,12 +61,12 @@ func (tx *Transaction) SetID() {
 func (tI TXInput) Unlock(publicKeyHash []byte) bool {
 	lockingHash := HashPublicKey(tI.ScriptSig.PublicKey)
 
-	return bytes.Compare(lockingHash, publicKeyHash) == 0
+	return bytes.Equal(lockingHash, publicKeyHash)
 }
 
 // Check key
 func (tO TXOutput) IsLockedWithKey(publicKeyHash []byte) bool {
-	return bytes.Compare(tO.ScriptPubKey, publicKeyHash) == 0
+	return bytes.Equal(tO.ScriptPubKey, publicKeyHash)
 }
 
 // Lock with publicKey
@@ -138,13 +138,13 @@ func NewUTXOTransaction(from, to string, amount int, UTXOSet *UTXOSet) *Transact
 	// Build a list of outputs
 	outputs = append(outputs, *NewTXOutput(amount, to))
 	if balance > amount {
-		outputs = append(outputs, *NewTXOutput(balance - amount, from))
+		outputs = append(outputs, *NewTXOutput(balance-amount, from))
 	}
 
 	tx := Transaction{nil, inputs, outputs}
 	tx.SetID()
 	UTXOSet.Blockchain.SignTransaction(&tx, wallet.PrivateKey)
-	
+
 	return &tx
 }
 
@@ -217,7 +217,7 @@ func (tx *Transaction) Verify(prevTXs map[string]Transaction) bool {
 
 	for inId, vin := range tx.Vin {
 		prevTx := prevTXs[hex.EncodeToString(vin.Txid)]
-		
+
 		abbreviatedTx.Vin[inId].ScriptSig = &ScriptSig{}
 		abbreviatedTx.Vin[inId].ScriptSig.PublicKey = prevTx.Vout[vin.TxoutIdx].ScriptPubKey
 		abbreviatedTx.SetID()
@@ -232,13 +232,13 @@ func (tx *Transaction) Verify(prevTXs map[string]Transaction) bool {
 		// Signature is a pair of numbers.
 		r.SetBytes(vin.ScriptSig.Signature[:(sigLen / 2)])
 		s.SetBytes(vin.ScriptSig.Signature[(sigLen / 2):])
-		
+
 		// PublicKey is a pair of coordinates.
 		x.SetBytes(vin.ScriptSig.PublicKey[:(keyLen / 2)])
 		y.SetBytes(vin.ScriptSig.PublicKey[(keyLen / 2):])
 
 		rawPublicKey := &ecdsa.PublicKey{curve, &x, &y}
-		if ecdsa.Verify(rawPublicKey, abbreviatedTx.ID, &r, &s) == false {
+		if !ecdsa.Verify(rawPublicKey, abbreviatedTx.ID, &r, &s) {
 			return false
 		}
 	}
