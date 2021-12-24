@@ -110,4 +110,10 @@ func (cli *Cli) printUsage() {
 	fmt.Println("  getbalance -address ADDRESS - Get balance of ADDRESS")
 	fmt.Println("  createwallet - Create your Wallet")
 	fmt.Println("  showaddresses - Show all addresses")
+	fmt.Println("  startnode -id NODE_ID - Start a node with ID")
+}
+
+func (cli *Cli) startNode(nodeID int) {
+	println("Node ID %d - started", nodeID)
+	StartServer(nodeID)
 }

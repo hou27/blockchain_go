@@ -20,12 +20,14 @@ func (cli *Cli) Active() {
 	getBalanceCmd := flag.NewFlagSet("getbalance", flag.ExitOnError)
 	createWalletCmd := flag.NewFlagSet("createwallet", flag.ExitOnError)
 	showAddrsCmd := flag.NewFlagSet("showaddresses", flag.ExitOnError)
+	startNodeCmd := flag.NewFlagSet("startnode", flag.ExitOnError)
 
 	sendFrom := sendCmd.String("from", "", "Source address")
 	sendTo := sendCmd.String("to", "", "Destination address")
 	sendAmount := sendCmd.Int("amount", 0, "Amount to send")
 	createBlockchainAddr := createBlockchainCmd.String("address", "", "First Miner's address")
 	getBalanceAddress := getBalanceCmd.String("address", "", "The address to get balance for")
+	nodeID := startNodeCmd.Int("id", 0, "Node ID")
 
 	switch os.Args[1] {
 	case "send":
@@ -55,6 +57,11 @@ func (cli *Cli) Active() {
 		}
 	case "showaddresses":
 		err := showAddrsCmd.Parse(os.Args[2:])
+		if err != nil {
+			log.Panic(err)
+		}
+	case "startnode":
+		err := startNodeCmd.Parse(os.Args[2:])
 		if err != nil {
 			log.Panic(err)
 		}
@@ -97,5 +104,13 @@ func (cli *Cli) Active() {
 
 	if showAddrsCmd.Parsed() {
 		cli.showAddresses()
+	}
+
+	if startNodeCmd.Parsed() {
+		if *nodeID == 0 {
+			startNodeCmd.Usage()
+			os.Exit(1)
+		}
+		cli.startNode(*nodeID)
 	}
 }

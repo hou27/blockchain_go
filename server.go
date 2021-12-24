@@ -26,7 +26,7 @@ func StartServer(nodeID int) {
 		}
 		go func(c net.Conn) {
 			// Echo data back to the client
-			io.Copy(c, c)		
+			io.Copy(c, c)
 			c.Close()
 		}(conn)
 	}
