@@ -121,6 +121,7 @@ func GetBlockchain() *Blockchain {
 // Add Blockchain
 func (bc *Blockchain) AddBlock(transactions []*Transaction) *Block {
 	var lastHash []byte
+	var lastHeight int
 
 	for _, tx := range transactions {
 		if !bc.VerifyTransaction(tx) {
@@ -132,13 +133,16 @@ func (bc *Blockchain) AddBlock(transactions []*Transaction) *Block {
 		b := tx.Bucket([]byte("blocks"))
 		lastHash = b.Get([]byte("last"))
 
+		block := DeserializeBlock(b.Get(lastHash))
+		lastHeight = block.Height
+
 		return nil
 	})
 	if err != nil {
 		log.Panic(err)
 	}
 
-	newBlock := NewBlock(transactions, lastHash)
+	newBlock := NewBlock(transactions, lastHash, lastHeight + 1)
 	err = bc.validateStructure(newBlock)
 	if err != nil {
 		log.Panic(err)

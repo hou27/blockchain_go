@@ -7,10 +7,12 @@ import (
 	"net"
 )
 
+const networkProtocol = "tcp"
+
 // Starts a node
 func StartServer(nodeID int) {
 	// Creates servers
-	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", nodeID))
+	ln, err := net.Listen(networkProtocol, fmt.Sprintf(":%d", nodeID))
 	if err != nil {
 		log.Panic(err)
 	}

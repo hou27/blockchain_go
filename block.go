@@ -13,16 +13,18 @@ type Block struct {
 	PrevHash		[]byte `validate:"required"`
 	Transactions	[]*Transaction `validate:"required"`
 	Nonce			int `validate:"min=0"`
+	Height			int `validate:"min=0"`
 }
 
 // Generate genesis block
 func GenerateGenesis(tx *Transaction) *Block {
-	return NewBlock([]*Transaction{tx}, []byte{})
+	// Genesis block's height is 0.
+	return NewBlock([]*Transaction{tx}, []byte{}, 0)
 }
 
 // Prepare new block
-func NewBlock(transactions []*Transaction, prevHash []byte) *Block {
-	newblock := &Block{int32(time.Now().Unix()), nil, prevHash, transactions, 0}
+func NewBlock(transactions []*Transaction, prevHash []byte, height int) *Block {
+	newblock := &Block{int32(time.Now().Unix()), nil, prevHash, transactions, 0, height}
 	pow := NewProofOfWork(newblock)
 	nonce, hash := pow.Run()
 
