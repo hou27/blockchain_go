@@ -114,6 +114,6 @@ func (cli *Cli) printUsage() {
 }
 
 func (cli *Cli) startNode(nodeID string) {
-	println("Node ID %s - started", nodeID)
+	fmt.Printf("Node ID ::: %s - started\n", nodeID)
 	StartServer(nodeID)
 }
