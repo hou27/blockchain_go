@@ -9,12 +9,12 @@ import (
 	"github.com/btcsuite/btcutil/base58"
 )
 
-func (cli *Cli) send(from, to string, amount int) {
+func (cli *Cli) send(from, to string, amount int, nodeID string) {
 	bc := GetBlockchain()
 	defer bc.db.Close()
 
 	UTXOSet := UTXOSet{bc}
-	tx := NewUTXOTransaction(from, to, amount, &UTXOSet)
+	tx := NewUTXOTransaction(from, to, amount, &UTXOSet, nodeID)
 	rewardTx := NewCoinbaseTX(from, "Mining reward")
 	newBlock := bc.AddBlock([]*Transaction{rewardTx, tx})
 	UTXOSet.Update(newBlock)
@@ -82,16 +82,16 @@ func (cli *Cli) getBalance(address string) {
 	fmt.Printf("Balance of '%s': %d\n", address, balance)
 }
 
-func (cli *Cli) createWallet() {
-	wallets, _ := NewWallets()
-	address := wallets.CreateWallet()
-	wallets.SaveToFile()
+func (cli *Cli) createWallet(nodeID string) {
+	wallets, _ := NewWallets(nodeID)
+	address := wallets.CreateWallet(nodeID)
+	wallets.SaveToFile(nodeID)
 
 	fmt.Printf("Your new address: %s\n", address)
 }
 
-func (cli *Cli) showAddresses() {
-	wallets, err := NewWallets()
+func (cli *Cli) showAddresses(nodeID string) {
+	wallets, err := NewWallets(nodeID)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -110,10 +110,10 @@ func (cli *Cli) printUsage() {
 	fmt.Println("  getbalance -address ADDRESS - Get balance of ADDRESS")
 	fmt.Println("  createwallet - Create your Wallet")
 	fmt.Println("  showaddresses - Show all addresses")
-	fmt.Println("  startnode -id NODE_ID - Start a node with ID")
+	fmt.Println("  startnode - Start a node with NODE_ID")
 }
 
-func (cli *Cli) startNode(nodeID int) {
-	println("Node ID %d - started", nodeID)
+func (cli *Cli) startNode(nodeID string) {
+	println("Node ID %s - started", nodeID)
 	StartServer(nodeID)
 }

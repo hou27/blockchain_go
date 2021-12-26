@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 )
@@ -14,6 +15,13 @@ func (cli *Cli) Active() {
 		cli.printUsage()
 		os.Exit(1)
 	}
+
+	nodeID := os.Getenv("NODE_ID")
+	if nodeID == "" {
+		fmt.Printf("NODE_ID is not set yet.")
+		os.Exit(1)
+	}
+
 	sendCmd := flag.NewFlagSet("send", flag.ExitOnError)
 	createBlockchainCmd := flag.NewFlagSet("createblockchain", flag.ExitOnError)
 	showBlocksCmd := flag.NewFlagSet("showblocks", flag.ExitOnError)
@@ -27,7 +35,6 @@ func (cli *Cli) Active() {
 	sendAmount := sendCmd.Int("amount", 0, "Amount to send")
 	createBlockchainAddr := createBlockchainCmd.String("address", "", "First Miner's address")
 	getBalanceAddress := getBalanceCmd.String("address", "", "The address to get balance for")
-	nodeID := startNodeCmd.Int("id", 0, "Node ID")
 
 	switch os.Args[1] {
 	case "send":
@@ -75,7 +82,7 @@ func (cli *Cli) Active() {
 			sendCmd.Usage()
 			os.Exit(1)
 		}
-		cli.send(*sendFrom, *sendTo, *sendAmount)
+		cli.send(*sendFrom, *sendTo, *sendAmount, nodeID)
 	}
 
 	if createBlockchainCmd.Parsed() {
@@ -99,18 +106,18 @@ func (cli *Cli) Active() {
 	}
 
 	if createWalletCmd.Parsed() {
-		cli.createWallet()
+		cli.createWallet(nodeID)
 	}
 
 	if showAddrsCmd.Parsed() {
-		cli.showAddresses()
+		cli.showAddresses(nodeID)
 	}
 
 	if startNodeCmd.Parsed() {
-		if *nodeID == 0 {
+		if nodeID == "" {
 			startNodeCmd.Usage()
 			os.Exit(1)
 		}
-		cli.startNode(*nodeID)
+		cli.startNode(nodeID)
 	}
 }

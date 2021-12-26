@@ -7,6 +7,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/gob"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -16,7 +17,7 @@ import (
 )
 
 const version = byte(0x00)
-const walletFile = "gowallet.dat"
+const walletFile = "gowallet_%s.dat"
 
 // Wallet
 type Wallet struct {
@@ -63,7 +64,7 @@ func NewWallet() *Wallet {
 }
 
 // CreateWallet adds a Wallet to Wallets
-func (ws *Wallets) CreateWallet() string {
+func (ws *Wallets) CreateWallet(nodeID string) string {
 	wallet := NewWallet()
 	address := wallet.GetAddress()
 
@@ -73,35 +74,20 @@ func (ws *Wallets) CreateWallet() string {
 }
 
 // Creates wallets and fills it from a file if it exists
-func NewWallets() (*Wallets, error) {
+func NewWallets(nodeID string) (*Wallets, error) {
 	wallets := Wallets{}
 	wallets.Wallets = make(map[string]*Wallet)
 
-	if _, err := os.Stat(walletFile); os.IsNotExist(err) {
-		return &wallets, err
-	}
-
-	fileContent, err := ioutil.ReadFile(walletFile)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	var ws Wallets
-	gob.Register(elliptic.P256())
-	decoder := gob.NewDecoder(bytes.NewReader(fileContent))
-	err = decoder.Decode(&ws)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	wallets.Wallets = ws.Wallets
+	err := wallets.LoadSpecificWallet(nodeID)
 
 	return &wallets, err
 }
 
 // Saves the wallets to a file
-func (ws Wallets) SaveToFile() {
+func (ws Wallets) SaveToFile(nodeID string) {
 	var content bytes.Buffer
+
+	walletFile := fmt.Sprintf(walletFile, nodeID)
 
 	gob.Register(elliptic.P256())
 	encoder := gob.NewEncoder(&content)
@@ -136,4 +122,31 @@ func IsValidWallet(address string) bool {
 	_, _, err := base58.CheckDecode(address)
 
 	return err == nil
+}
+
+// Loads wallets from the file
+func (ws *Wallets) LoadSpecificWallet(nodeID string) error {
+	walletFile := fmt.Sprintf(walletFile, nodeID)
+
+	if _, err := os.Stat(walletFile); os.IsNotExist(err) {
+		return err
+	}
+
+	content, err := ioutil.ReadFile(walletFile)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	var wallets Wallets
+
+	gob.Register(elliptic.P256())
+	decoder := gob.NewDecoder(bytes.NewReader(content))
+	err = decoder.Decode(&wallets)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	ws.Wallets = wallets.Wallets
+
+	return nil
 }

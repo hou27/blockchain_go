@@ -10,7 +10,7 @@ import (
 const networkProtocol = "tcp"
 
 // Starts a node
-func StartServer(nodeID int) {
+func StartServer(nodeID string) {
 	// Creates servers
 	ln, err := net.Listen(networkProtocol, fmt.Sprintf(":%d", nodeID))
 	if err != nil {

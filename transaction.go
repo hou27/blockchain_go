@@ -107,11 +107,11 @@ func NewCoinbaseTX(to, data string) *Transaction {
 }
 
 // Creates a new transaction
-func NewUTXOTransaction(from, to string, amount int, UTXOSet *UTXOSet) *Transaction {
+func NewUTXOTransaction(from, to string, amount int, UTXOSet *UTXOSet, nodeID string) *Transaction {
 	var inputs []TXInput
 	var outputs []TXOutput
 
-	wallets, err := NewWallets()
+	wallets, err := NewWallets(nodeID)
 	if err != nil {
 		log.Panic(err)
 	}
