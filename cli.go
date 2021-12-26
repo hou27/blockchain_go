@@ -90,11 +90,11 @@ func (cli *Cli) Active() {
 			createBlockchainCmd.Usage()
 			os.Exit(1)
 		}
-		cli.createBlockchain(*createBlockchainAddr)
+		cli.createBlockchain(*createBlockchainAddr, nodeID)
 	}
 
 	if showBlocksCmd.Parsed() {
-		cli.showBlocks()
+		cli.showBlocks(nodeID)
 	}
 
 	if getBalanceCmd.Parsed() {
@@ -102,7 +102,7 @@ func (cli *Cli) Active() {
 			getBalanceCmd.Usage()
 			os.Exit(1)
 		}
-		cli.getBalance(*getBalanceAddress)
+		cli.getBalance(*getBalanceAddress, nodeID)
 	}
 
 	if createWalletCmd.Parsed() {

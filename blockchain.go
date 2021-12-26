@@ -41,8 +41,7 @@ func (bc *Blockchain) validateStructure(newBlock *Block) error {
 	return nil
 }
 
-func dbExists() bool {
-	dbFile := fmt.Sprintf(dbFile, "0600")
+func dbExists(dbFile string) bool {
 	if _, err := os.Stat(dbFile); os.IsNotExist(err) {
 		return false
 	}
@@ -51,14 +50,15 @@ func dbExists() bool {
 }
 
 // Creates a new blockchain
-func CreateBlockchain(address string) *Blockchain {
-	if dbExists() {
+func CreateBlockchain(address, nodeID string) *Blockchain {
+	dbFile := fmt.Sprintf(dbFile, nodeID)
+
+	if dbExists(dbFile) {
 		fmt.Println("Blockchain already exists.")
 		os.Exit(1)
 	}
 
 	var last []byte
-	dbFile := fmt.Sprintf(dbFile, "0600")
 	db, err := bolt.Open(dbFile, 0600, nil)
 	if err != nil {
 		log.Panic(err)
@@ -91,14 +91,15 @@ func CreateBlockchain(address string) *Blockchain {
 }
 
 // Get All Blockchains
-func GetBlockchain() *Blockchain {
-	if !dbExists() {
+func GetBlockchain(nodeID string) *Blockchain {
+	dbFile := fmt.Sprintf(dbFile, nodeID)
+
+	if !dbExists(dbFile) {
 		fmt.Println("There's no blockchain yet. Create one first.")
 		os.Exit(1)
 	}
 	var last []byte
-
-	dbFile := fmt.Sprintf(dbFile, "0600")
+	
 	db, err := bolt.Open(dbFile, 0600, nil)
 	if err != nil {
 		log.Fatal(err)

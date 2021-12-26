@@ -10,7 +10,7 @@ import (
 )
 
 func (cli *Cli) send(from, to string, amount int, nodeID string) {
-	bc := GetBlockchain()
+	bc := GetBlockchain(nodeID)
 	defer bc.db.Close()
 
 	UTXOSet := UTXOSet{bc}
@@ -21,12 +21,12 @@ func (cli *Cli) send(from, to string, amount int, nodeID string) {
 	fmt.Println("Send Complete!!")
 }
 
-func (cli *Cli) createBlockchain(address string) {
+func (cli *Cli) createBlockchain(address, nodeID string) {
 	if !IsValidWallet(address) {
 		fmt.Println("Use correct wallet")
 		os.Exit(1)
 	}
-	newBc := CreateBlockchain(address)
+	newBc := CreateBlockchain(address, nodeID)
 	defer newBc.db.Close()
 
 	UTXOSet := UTXOSet{newBc}
@@ -35,8 +35,8 @@ func (cli *Cli) createBlockchain(address string) {
 }
 
 // Show Blockchains
-func (cli *Cli) showBlocks() {
-	bc := GetBlockchain()
+func (cli *Cli) showBlocks(nodeID string) {
+	bc := GetBlockchain(nodeID)
 	defer bc.db.Close()
 	bcI := bc.Iterator()
 	for {
@@ -62,8 +62,8 @@ func (cli *Cli) showBlocks() {
 	}
 }
 
-func (cli *Cli) getBalance(address string) {
-	bc := GetBlockchain()
+func (cli *Cli) getBalance(address, nodeID string) {
+	bc := GetBlockchain(nodeID)
 	UTXOSet := UTXOSet{bc}
 	defer bc.db.Close()
 

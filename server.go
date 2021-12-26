@@ -43,7 +43,7 @@ func StartServer(nodeID string) {
 	// Close Listener
 	defer ln.Close()
 
-	bc := GetBlockchain()
+	bc := GetBlockchain(nodeID)
 
 	if nodeID != dnsNode {
 		sendData(dnsNode, bc, []byte{})
