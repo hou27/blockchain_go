@@ -18,7 +18,7 @@ func (cli *Cli) Active() {
 
 	nodeID := os.Getenv("NODE_ID")
 	if nodeID == "" {
-		fmt.Printf("NODE_ID is not set yet.")
+		fmt.Println("NODE_ID is not set yet.")
 		os.Exit(1)
 	}
 

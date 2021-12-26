@@ -12,7 +12,7 @@ const networkProtocol = "tcp"
 // Starts a node
 func StartServer(nodeID string) {
 	// Creates servers
-	ln, err := net.Listen(networkProtocol, fmt.Sprintf(":%d", nodeID))
+	ln, err := net.Listen(networkProtocol, fmt.Sprintf(":%s", nodeID))
 	if err != nil {
 		log.Panic(err)
 	}
