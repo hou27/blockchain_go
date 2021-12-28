@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net"
 )
@@ -65,6 +66,29 @@ func sendVersion(dest string, bc *Blockchain) {
 	sendData(dest, request)
 }
 
+func handleVersion(request []byte, bc *Blockchain) {
+	
+}
+
+func handleConnection(conn net.Conn, bc *Blockchain) {
+	request, err := ioutil.ReadAll(conn)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	command := bytesToCommand(request[:commandLength])
+	fmt.Printf("Received ::: %s\n", command)
+
+	switch command {
+	case "version":
+		handleVersion(request, bc)
+	default:
+		fmt.Println("Command unknown.")
+	}
+
+	conn.Close()
+}
+
 // Starts a node
 func StartServer(nodeID string) {
 	// Creates servers
@@ -88,10 +112,6 @@ func StartServer(nodeID string) {
 		if err != nil {
 			log.Panic(err)
 		}
-		go func(c net.Conn) {
-			// Echo data back to the client
-			io.Copy(c, c)
-			c.Close()
-		}(conn)
+		go handleConnection(conn, bc)
 	}
 }
