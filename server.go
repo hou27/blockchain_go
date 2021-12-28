@@ -8,18 +8,43 @@ import (
 	"net"
 )
 
-const networkProtocol = "tcp"
-const dnsNode = "3000"
-const nodeVersion = 1
+const (
+	networkProtocol = "tcp"
+	dnsNode = "3000"
+	nodeVersion = 1
+	commandLength = 12
+)
 
-type data struct {
+type Version struct {
 	version 	int
 	blockHeight int
 	from		string
 }
 
-func sendData(nodeID string, bc *Blockchain, data []byte) {
-	conn, err := net.Dial(networkProtocol, nodeID)
+func commandToBytes(command string) []byte {
+	var bytes [commandLength]byte
+
+	for idx, c := range command {
+		bytes[idx] = byte(c)
+	}
+
+	return bytes[:]
+}
+
+func bytesToCommand(bytes []byte) string {
+	var command []byte
+
+	for _, b := range bytes {
+		if b != 0x0 {
+			command = append(command, b)
+		}
+	}
+
+	return string(command[:])
+}
+
+func sendData(nodeID string, data []byte) {
+	conn, err := net.Dial(networkProtocol, fmt.Sprintf(":%s", nodeID))
 	if err != nil {
 		log.Panic(err)
 	}
@@ -30,6 +55,14 @@ func sendData(nodeID string, bc *Blockchain, data []byte) {
 	if err != nil {
 		log.Panic(err)
 	}
+}
+
+func sendVersion(dest string, bc *Blockchain) {
+	bestHeight := bc.getBestHeight()
+	payload := GobEncode(Version{nodeVersion, bestHeight, dest})
+
+	request := append(commandToBytes("version"), payload...)
+	sendData(dest, request)
 }
 
 // Starts a node
@@ -46,7 +79,7 @@ func StartServer(nodeID string) {
 	bc := GetBlockchain(nodeID)
 
 	if nodeID != dnsNode {
-		sendData(dnsNode, bc, []byte{})
+		sendVersion(dnsNode, bc)
 	}
 
 	for {

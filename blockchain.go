@@ -199,6 +199,25 @@ func (bcI *BlockchainIterator) getNextBlock() *Block {
 	return block
 }
 
+func (bc Blockchain) getBestHeight() int {
+	var lastHeight int
+
+	err := bc.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte("blocks"))
+		lastHash := b.Get([]byte("last"))
+
+		block := DeserializeBlock(b.Get(lastHash))
+		lastHeight = block.Height
+
+		return nil
+	})
+	if err != nil {
+		log.Panic(err)
+	}
+
+	return lastHeight
+}
+
 // Finds all unspent transaction outputs
 func (bc *Blockchain) FindAllUTXOs() map[string][]TXOutput {
 	UTXO := make(map[string][]TXOutput)
