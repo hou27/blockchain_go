@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/gob"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -16,6 +17,8 @@ const (
 	commandLength = 12
 )
 
+// Information about program version and block count.
+// Exchanged when first connecting.
 type Version struct {
 	version 	int
 	blockHeight int
@@ -67,6 +70,16 @@ func sendVersion(dest string, bc *Blockchain) {
 }
 
 func handleVersion(request []byte, bc *Blockchain) {
+	buf := new(bytes.Buffer)
+	payload := Version{}
+
+	buf.Write(request[commandLength:])
+	dec := gob.NewDecoder(buf)
+	err := dec.Decode(&payload)
+	if err != nil {
+		log.Panic(err)
+	}
+
 	
 }
 
