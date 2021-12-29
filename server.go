@@ -80,8 +80,14 @@ func handleVersion(request []byte, bc *Blockchain) {
 		log.Panic(err)
 	}
 
-	// myBestHeight := bc.getBestHeight()
-	// foreignerBestHeight := payload.blockHeight
+	myBestHeight := bc.getBestHeight()
+	foreignerBestHeight := payload.BlockHeight
+
+	if myBestHeight >= foreignerBestHeight {
+		sendVersion(payload.From, bc)
+	} else {
+		// get block
+	}
 }
 
 func handleConnection(conn net.Conn, bc *Blockchain) {
