@@ -65,7 +65,7 @@ func bytesToCommand(bytes []byte) string {
 }
 
 func sendData(nodeID string, data []byte) {
-	conn, err := net.Dial(networkProtocol, fmt.Sprintf(":%s", nodeID))
+	conn, err := net.Dial(networkProtocol, nodeID)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -142,7 +142,7 @@ func handleVersion(request []byte, bc *Blockchain) {
 	myBestHeight := bc.getBestHeight()
 	foreignerBestHeight := payload.BlockHeight
 
-	if myBestHeight >= foreignerBestHeight {
+	if myBestHeight > foreignerBestHeight {
 		sendVersion(payload.From, bc)
 	} else {
 		sendGetBlocks(payload.From)
@@ -187,7 +187,7 @@ func StartServer(nodeID string) {
 	bc := GetBlockchain(nodeID)
 
 	if nodeID != dnsNode {
-		sendVersion(dnsNode, bc)
+		sendVersion(fmt.Sprintf(":%s", dnsNode), bc)
 	}
 
 	for {
