@@ -16,6 +16,7 @@ How to use:
   getbalance -address ADDRESS - Get balance of ADDRESS
   createwallet - Create your Wallet
   showaddresses - Show all addresses
+  startnode - Start a node with NODE_ID
 ```
 
 - Proof-of-Work
