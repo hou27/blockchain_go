@@ -20,9 +20,9 @@ const (
 // Information about program version and block count.
 // Exchanged when first connecting.
 type Version struct {
-	version 	int
-	blockHeight int
-	from		string
+	Version 	int
+	BlockHeight int
+	From		string
 }
 
 func commandToBytes(command string) []byte {
@@ -80,7 +80,8 @@ func handleVersion(request []byte, bc *Blockchain) {
 		log.Panic(err)
 	}
 
-	
+	// myBestHeight := bc.getBestHeight()
+	// foreignerBestHeight := payload.blockHeight
 }
 
 func handleConnection(conn net.Conn, bc *Blockchain) {
