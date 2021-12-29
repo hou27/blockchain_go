@@ -181,6 +181,23 @@ func (bc *Blockchain) Iterator() *BlockchainIterator {
 	return bcI
 }
 
+// Returns a list of hashes of all the blocks
+func (bc *Blockchain) GetBlockHashes() [][]byte {
+	var blocks [][]byte
+	bcI := bc.Iterator()
+
+	for {
+		block := bcI.getNextBlock()
+		blocks = append(blocks, block.Hash)
+
+		if len(block.PrevHash) == 0 {
+			break
+		}
+	}
+
+	return blocks
+}
+
 func (bcI *BlockchainIterator) getNextBlock() *Block {
 	var block *Block
 
