@@ -36,10 +36,22 @@ type Inv struct {
 	From	string
 }
 
+type block struct {
+	From string
+	Block    []byte
+}
+
 // Request an inv of all blocks in a range.
 // It isn't bringing all the blocks, but requesting a hash list of blocks.
 type getblocks struct {
-	From string
+	From	string
+}
+
+// Request a single block or transaction by hash.
+type getdata struct {
+	From	string
+	Type	string
+	ID		[]byte
 }
 
 func commandToBytes(command string) []byte {
@@ -94,11 +106,26 @@ func sendInv(dest, kind string, items [][]byte) {
 	sendData(dest, request)
 }
 
+func sendBlock(dest string, b *Block) {
+	data := block{nodeAddr, b.Serialize()}
+	payload := GobEncode(data)
+	request := append(commandToBytes("block"), payload...)
+
+	sendData(dest, request)
+}
+
 func sendGetBlocks(dest string) {
 	payload := GobEncode(getblocks{nodeAddr})
 	request := append(commandToBytes("getblocks"), payload...)
 
 	sendData(dest, request)
+}
+
+func sendGetData(address, kind string, id []byte) {
+	payload := GobEncode(getdata{nodeAddr, kind, id})
+	request := append(commandToBytes("getdata"), payload...)
+
+	sendData(address, request)
 }
 
 func handleInv(request []byte) {
@@ -113,7 +140,8 @@ func handleInv(request []byte) {
 	fmt.Printf("Recevied %d %s\n", len(payload.Items), payload.Type)
 
 	if payload.Type == "block" {
-		// handle inv
+		blockHash := payload.Items[0]
+		sendGetData(payload.From, "block", blockHash)
 	}
 }
 
@@ -128,6 +156,25 @@ func handleGetBlocks(request []byte, bc *Blockchain) {
 
 	blocks := bc.GetBlockHashes()
 	sendInv(payload.From, "blocks", blocks)
+}
+
+func handleGetData(request []byte, bc *Blockchain) {
+	var payload getdata
+
+	dec := returnDecoder(request)
+	err := dec.Decode(&payload)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	if payload.Type == "block" {
+		block, err := bc.GetBlock([]byte(payload.ID))
+		if err != nil {
+			return
+		}
+
+		sendBlock(payload.From, &block)
+	}
 }
 
 func handleVersion(request []byte, bc *Blockchain) {
@@ -165,6 +212,10 @@ func handleConnection(conn net.Conn, bc *Blockchain) {
 		handleInv(request)
 	case "getblocks":
 		handleGetBlocks(request, bc)
+	case "getdata":
+		handleGetData(request, bc)
+	case "block":
+		// handleBlock(request, bc)
 	default:
 		fmt.Println("Command unknown.")
 	}

@@ -13,6 +13,11 @@ import (
 	"github.com/go-playground/validator"
 )
 
+const (
+	blockchainBucket = "blocks"
+	lastBlock = "last"
+)
+
 type Blockchain struct {
 	db   *bolt.DB
 	last []byte
@@ -67,7 +72,7 @@ func CreateBlockchain(address, nodeID string) *Blockchain {
 	err = db.Update(func(tx *bolt.Tx) error {
 		cb := NewCoinbaseTX(address, "init base")
 		genesis := GenerateGenesis(cb)
-		b, err := tx.CreateBucket([]byte("blocks"))
+		b, err := tx.CreateBucket([]byte(blockchainBucket))
 		if err != nil {
 			return err
 		}
@@ -75,7 +80,7 @@ func CreateBlockchain(address, nodeID string) *Blockchain {
 		if err != nil {
 			return err
 		}
-		err = b.Put([]byte("last"), genesis.Hash)
+		err = b.Put([]byte(lastBlock), genesis.Hash)
 		if err != nil {
 			return err
 		}
@@ -106,8 +111,8 @@ func GetBlockchain(nodeID string) *Blockchain {
 	}
 
 	err = db.Update(func(tx *bolt.Tx) error {
-		bc := tx.Bucket([]byte("blocks"))
-		last = bc.Get([]byte("last"))
+		bc := tx.Bucket([]byte(blockchainBucket))
+		last = bc.Get([]byte(lastBlock))
 
 		return nil
 	})
@@ -117,6 +122,28 @@ func GetBlockchain(nodeID string) *Blockchain {
 
 	bc := Blockchain{db, last}
 	return &bc
+}
+
+// Get a block by its hash
+func (bc *Blockchain) GetBlock(blockHash []byte) (Block, error) {
+	var block Block
+
+	err := bc.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(blockchainBucket))
+		blockData := b.Get(blockHash)
+		if blockData == nil {
+			return errors.New("Block not found")
+		}
+
+		block = *DeserializeBlock(blockData)
+
+		return nil
+	})
+	if err != nil {
+		return block, err
+	}
+
+	return block, nil
 }
 
 // Add Blockchain
@@ -132,7 +159,7 @@ func (bc *Blockchain) AddBlock(transactions []*Transaction) *Block {
 
 	err := bc.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("blocks"))
-		lastHash = b.Get([]byte("last"))
+		lastHash = b.Get([]byte(lastBlock))
 
 		block := DeserializeBlock(b.Get(lastHash))
 		lastHeight = block.Height
@@ -156,7 +183,7 @@ func (bc *Blockchain) AddBlock(transactions []*Transaction) *Block {
 			log.Panic(err)
 		}
 
-		err = b.Put([]byte("last"), newBlock.Hash)
+		err = b.Put([]byte(lastBlock), newBlock.Hash)
 		if err != nil {
 			log.Panic(err)
 		}
@@ -221,7 +248,7 @@ func (bc Blockchain) getBestHeight() int {
 
 	err := bc.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("blocks"))
-		lastHash := b.Get([]byte("last"))
+		lastHash := b.Get([]byte(lastBlock))
 
 		block := DeserializeBlock(b.Get(lastHash))
 		lastHeight = block.Height
