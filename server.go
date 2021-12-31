@@ -145,6 +145,25 @@ func handleInv(request []byte) {
 	}
 }
 
+func handleBlock(request []byte, bc *Blockchain) {
+	var payload block
+
+	dec := returnDecoder(request)
+	err := dec.Decode(&payload)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	blockData := payload.Block
+	block := DeserializeBlock(blockData)
+
+	fmt.Println("Recevied a new block")
+	fmt.Println(block)
+
+	UTXOSet := UTXOSet{bc}
+    UTXOSet.Update(block)
+}
+
 func handleGetBlocks(request []byte, bc *Blockchain) {
 	var payload getblocks
 
@@ -215,7 +234,7 @@ func handleConnection(conn net.Conn, bc *Blockchain) {
 	case "getdata":
 		handleGetData(request, bc)
 	case "block":
-		// handleBlock(request, bc)
+		handleBlock(request, bc)
 	default:
 		fmt.Println("Command unknown.")
 	}
