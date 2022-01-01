@@ -25,6 +25,7 @@ type Version struct {
 	Version 	int
 	BlockHeight int
 	From		string
+	To			string
 }
 
 // "I have these blocks/transactions: ..."
@@ -34,11 +35,12 @@ type Inv struct {
 	Type	string
 	Items	[][]byte
 	From	string
+	To		string
 }
 
 type block struct {
-	From string
-	Block    []byte
+	From	string
+	Block	[]byte
 }
 
 // Request an inv of all blocks in a range.
@@ -76,8 +78,8 @@ func bytesToCommand(bytes []byte) string {
 	return string(command[:])
 }
 
-func sendData(nodeID string, data []byte) {
-	conn, err := net.Dial(networkProtocol, nodeID)
+func sendData(dest string, data []byte) {
+	conn, err := net.Dial(networkProtocol, dest)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -92,14 +94,14 @@ func sendData(nodeID string, data []byte) {
 
 func sendVersion(dest string, bc *Blockchain) {
 	bestHeight := bc.getBestHeight()
-	payload := GobEncode(Version{nodeVersion, bestHeight, dest})
+	payload := GobEncode(Version{nodeVersion, bestHeight, nodeAddr, dest})
 
 	request := append(commandToBytes("version"), payload...)
 	sendData(dest, request)
 }
 
 func sendInv(dest, kind string, items [][]byte) {
-	inven := Inv{kind, items, dest}
+	inven := Inv{kind, items, nodeAddr, dest}
 	payload := GobEncode(inven)
 	request := append(commandToBytes("inv"), payload...)
 
@@ -121,11 +123,11 @@ func sendGetBlocks(dest string) {
 	sendData(dest, request)
 }
 
-func sendGetData(address, kind string, id []byte) {
+func sendGetData(dest, kind string, id []byte) {
 	payload := GobEncode(getdata{nodeAddr, kind, id})
 	request := append(commandToBytes("getdata"), payload...)
 
-	sendData(address, request)
+	sendData(dest, request)
 }
 
 func handleInv(request []byte) {
@@ -139,7 +141,7 @@ func handleInv(request []byte) {
 
 	fmt.Printf("Recevied %d %s\n", len(payload.Items), payload.Type)
 
-	if payload.Type == "block" {
+	if payload.Type == "blocks" {
 		blockHash := payload.Items[0]
 		sendGetData(payload.From, "block", blockHash)
 	}
@@ -161,7 +163,7 @@ func handleBlock(request []byte, bc *Blockchain) {
 	fmt.Println(block)
 
 	UTXOSet := UTXOSet{bc}
-    UTXOSet.Update(block)
+	UTXOSet.Update(block)
 }
 
 func handleGetBlocks(request []byte, bc *Blockchain) {
