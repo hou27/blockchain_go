@@ -180,12 +180,12 @@ func (bc *Blockchain) MineBlock(transactions []*Transaction) *Block {
 		b := tx.Bucket([]byte(blockchainBucket))
 		err := b.Put(newBlock.Hash, newBlock.Serialize())
 		if err != nil {
-			log.Panic(err)
+			return err
 		}
 
 		err = b.Put([]byte(lastBlock), newBlock.Hash)
 		if err != nil {
-			log.Panic(err)
+			return err
 		}
 
 		bc.last = newBlock.Hash

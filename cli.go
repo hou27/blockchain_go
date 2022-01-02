@@ -35,6 +35,7 @@ func (cli *Cli) Active() {
 	sendAmount := sendCmd.Int("amount", 0, "Amount to send")
 	createBlockchainAddr := createBlockchainCmd.String("address", "", "First Miner's address")
 	getBalanceAddress := getBalanceCmd.String("address", "", "The address to get balance for")
+	startMinerNode := startNodeCmd.String("minenode", "", "Turn on the mining mode")
 
 	switch os.Args[1] {
 	case "send":
@@ -118,6 +119,6 @@ func (cli *Cli) Active() {
 			startNodeCmd.Usage()
 			os.Exit(1)
 		}
-		cli.startNode(nodeID)
+		cli.startNode(nodeID, *startMinerNode)
 	}
 }

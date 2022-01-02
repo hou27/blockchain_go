@@ -15,9 +15,9 @@ func (cli *Cli) send(from, to string, amount int, nodeID string) {
 
 	UTXOSet := UTXOSet{bc}
 	tx := NewUTXOTransaction(from, to, amount, &UTXOSet, nodeID)
-	rewardTx := NewCoinbaseTX(from, "Mining reward")
-	newBlock := bc.MineBlock([]*Transaction{rewardTx, tx})
-	UTXOSet.Update(newBlock)
+	
+	sendTx(":3000", tx)
+
 	fmt.Println("Send Complete!!")
 }
 
@@ -111,10 +111,10 @@ func (cli *Cli) printUsage() {
 	fmt.Println("  getbalance -address ADDRESS - Get balance of ADDRESS")
 	fmt.Println("  createwallet - Create your Wallet")
 	fmt.Println("  showaddresses - Show all addresses")
-	fmt.Println("  startnode - Start a node with NODE_ID")
+	fmt.Println("  startnode -minenode ADDRESS - Start a node with NODE_ID")
 }
 
-func (cli *Cli) startNode(nodeID string) {
+func (cli *Cli) startNode(nodeID, minenode string) {
 	fmt.Printf("Node ID ::: %s - started\n", nodeID)
-	StartServer(nodeID)
+	StartServer(nodeID, minenode)
 }

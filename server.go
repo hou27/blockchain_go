@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/gob"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -12,12 +13,16 @@ import (
 
 const (
 	networkProtocol = "tcp"
-	dnsNode = "3000"
 	nodeVersion = 1
 	commandLength = 12
 )
 
-var nodeAddr string
+var (
+	nodesOnline = []string{":3000"}
+	nodeAddr string
+	mineNode string
+	mempool = make(map[string]Transaction)
+)
 
 // Information about program version and block count.
 // Exchanged when first connecting.
@@ -41,6 +46,12 @@ type Inv struct {
 type block struct {
 	From	string
 	Block	[]byte
+}
+
+// Send a transaction. This is sent only in response to a getdata request.
+type tx struct {
+	From	string
+	Tx		[]byte
 }
 
 // Request an inv of all blocks in a range.
@@ -108,6 +119,14 @@ func sendInv(dest, kind string, items [][]byte) {
 	sendData(dest, request)
 }
 
+func sendTx(dest string, transaction *Transaction) {
+	data := tx{nodeAddr, transaction.Serialize()}
+	payload := GobEncode(data)
+	request := append(commandToBytes("tx"), payload...)
+
+	sendData(dest, request)
+}
+
 func sendBlock(dest string, b *Block) {
 	data := block{nodeAddr, b.Serialize()}
 	payload := GobEncode(data)
@@ -145,6 +164,49 @@ func handleInv(request []byte) {
 		for _, blockHash := range payload.Items {
 			sendGetData(payload.From, "block", blockHash)
 		}
+	} else if payload.Type == "tx" {
+		txID := payload.Items[0]
+
+		if mempool[hex.EncodeToString(txID)].ID == nil {
+			sendGetData(payload.From, "tx", txID)
+		}
+	}
+}
+
+func handleTx(request []byte, bc *Blockchain) {
+	var payload tx
+
+	dec := returnDecoder(request)
+	err := dec.Decode(&payload)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	txData := payload.Tx
+	tx := DeserializeTx(txData)
+	mempool[hex.EncodeToString(tx.ID)] = tx
+
+	if nodeAddr == nodesOnline[0] {
+		for _, node := range nodesOnline {
+			if node != nodeAddr && node != payload.From {
+				sendInv(node, "tx", [][]byte{tx.ID})
+			}
+		}
+	} else {
+		if len(mempool) >= 2 && len(mineNode) > 0 {
+			var txs []*Transaction
+
+			for _, tx := range mempool {
+				txs = append(txs, &tx)
+			}
+			rewardTx := NewCoinbaseTX(payload.From, "Mining reward")
+			txs = append(txs, rewardTx)
+			newBlock := bc.MineBlock(txs)
+			UTXOSet := UTXOSet{bc}
+			UTXOSet.Update(newBlock)
+
+			mempool = make(map[string]Transaction)
+		}
 	}
 }
 
@@ -163,8 +225,8 @@ func handleBlock(request []byte, bc *Blockchain) {
 	fmt.Println("Recevied a new block")
 	fmt.Println(block)
 
-	bc.MineBlock(block.Transactions)
-	// bc.AddBlock(block)
+	// newBlock := bc.MineBlock(block.Transactions)
+	bc.AddBlock(block)
 	UTXOSet := UTXOSet{bc}
 	UTXOSet.Update(block)
 }
@@ -199,11 +261,20 @@ func handleGetData(request []byte, bc *Blockchain) {
 		}
 
 		sendBlock(payload.From, &block)
+	} else if payload.Type == "tx" {
+		txID := hex.EncodeToString(payload.ID)
+		tx := mempool[txID]
+
+		sendTx(payload.From, &tx)
 	}
 }
 
 func handleVersion(request []byte, bc *Blockchain) {
 	payload := Version{}
+
+	if nodeAddr == nodesOnline[0] {
+		nodesOnline = append(nodesOnline, nodeAddr)
+	}
 
 	dec := returnDecoder(request)
 	err := dec.Decode(&payload)
@@ -241,6 +312,8 @@ func handleConnection(conn net.Conn, bc *Blockchain) {
 		handleGetData(request, bc)
 	case "block":
 		handleBlock(request, bc)
+	case "tx":
+		handleTx(request, bc)
 	default:
 		fmt.Println("Command unknown.")
 	}
@@ -249,8 +322,14 @@ func handleConnection(conn net.Conn, bc *Blockchain) {
 }
 
 // Starts a node
-func StartServer(nodeID string) {
+func StartServer(nodeID, minenode string) {
 	nodeAddr = fmt.Sprintf(":%s", nodeID)
+
+	if len(minenode) > 0 {
+		mineNode = minenode
+		fmt.Println("Now mining is on. Address ::: ", mineNode)
+	}
+
 	// Creates servers
 	ln, err := net.Listen(networkProtocol, nodeAddr)
 	if err != nil {
@@ -262,8 +341,8 @@ func StartServer(nodeID string) {
 
 	bc := GetBlockchain(nodeID)
 
-	if nodeID != dnsNode {
-		sendVersion(fmt.Sprintf(":%s", dnsNode), bc)
+	if nodeID != nodesOnline[0] {
+		sendVersion(nodesOnline[0], bc)
 	}
 
 	for {
