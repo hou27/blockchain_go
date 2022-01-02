@@ -1,13 +1,15 @@
-# TEST
+# Scenario
 
-| NOED_ID | 3000             | 3001             |
-| :-----: | ---------------- | ---------------- |
-|    1    | createblockchain | createblockchain |
-|    2    | -                | send 3 coins     |
-|    3    | starnode         | -                |
-|    4    | -                | starnode         |
-|    5    | -                | sendVersion      |
-|    6    | sendGetBlocks    | -                |
-|    7    | -                | sendInv          |
-|    8    | sendGetData      | -                |
-|    9    | -                | sendBlock        |
+| NOED_ID |            3000(Full Node)            |       3001       |           3002(Mine Node)            |
+| :-----: | :-----------------------------------: | :--------------: | :----------------------------------: |
+|    1    |           createblockchain            | createblockchain |           createblockchain           |
+|    2    |             send 3 coins              |        -         |                  -                   |
+|    3    |               starnode                |     db copy      |               db copy                |
+|    4    |                   -                   |        -         |               starnode               |
+|    5    |                   -                   |   send 3 coins   |             sendVersion              |
+|    6    |                   -                   |  sendTx to 3000  |                  -                   |
+|    7    |      sendInv(tx, tx.ID) to 3002       |        -         |                  -                   |
+|    8    |                   -                   |        -         |    sendGetData(tx, txID) to 3000     |
+|    9    |            sendTx to 3002             |        -         |                  -                   |
+|   10    |                   -                   |        -         | sendInv(block, newblockHash) to 3000 |
+|   11    | sendGetData(block, blockHash) to 3002 |        -         |                  -                   |
