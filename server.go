@@ -184,15 +184,8 @@ func handleTx(request []byte, bc *Blockchain) {
 
 	txData := payload.Tx
 	tx := DeserializeTx(txData)
-	fmt.Println("after ::: ", tx)
-	if !bc.VerifyTransaction(tx) {
-		fmt.Println("why not")
-	} else {
-		fmt.Println("Verified.")
-	}
 	mempool[hex.EncodeToString(tx.ID)] = *tx
 
-	fmt.Println(nodesOnline, len(mineNode), len(mempool))
 	if nodeAddr == nodesOnline[0] {
 		for _, node := range nodesOnline {
 			if node != nodeAddr && node != payload.From {

@@ -57,18 +57,6 @@ func (tx *Transaction) SetID() {
 	tx.ID = hash[:]
 }
 
-// Hash returns the hash of the Transaction
-func (tx *Transaction) Hash() []byte {
-	var hash [32]byte
-
-	txCopy := *tx
-	txCopy.ID = []byte{}
-
-	hash = sha256.Sum256(txCopy.Serialize())
-
-	return hash[:]
-}
-
 // Unlock Tx
 func (tI TXInput) Unlock(publicKeyHash []byte) bool {
 	lockingHash := HashPublicKey(tI.ScriptSig.PublicKey)
@@ -198,7 +186,6 @@ func (tx *Transaction) Sign(privKey ecdsa.PrivateKey, prevTXs map[string]Transac
 
 		abbreviatedTx.Vin[inId].ScriptSig = &ScriptSig{}
 		abbreviatedTx.Vin[inId].ScriptSig.PublicKey = prevTx.Vout[vin.TxoutIdx].ScriptPubKey
-		// abbreviatedTx.SetID()
 
 		// Use ECDSA(not RSA)
 		r, s, err := ecdsa.Sign(rand.Reader, &privKey, abbreviatedTx.ID)
@@ -232,7 +219,6 @@ func (tx *Transaction) Verify(prevTXs map[string]Transaction) bool {
 
 		abbreviatedTx.Vin[inId].ScriptSig = &ScriptSig{}
 		abbreviatedTx.Vin[inId].ScriptSig.PublicKey = prevTx.Vout[vin.TxoutIdx].ScriptPubKey
-		// abbreviatedTx.SetID()
 
 		sigLen := len(vin.ScriptSig.Signature)
 		keyLen := len(vin.ScriptSig.PublicKey)

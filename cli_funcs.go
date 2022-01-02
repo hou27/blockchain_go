@@ -21,7 +21,6 @@ func (cli *Cli) send(from, to string, amount int, nodeID string, mineStart bool)
 		newBlock := bc.MineBlock([]*Transaction{rewardTx, tx})
 		UTXOSet.Update(newBlock)
 	} else {
-		fmt.Println("before ::: ", tx)
 		sendTx(":3000", tx)
 	}
 
