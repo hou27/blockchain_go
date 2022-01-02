@@ -378,7 +378,7 @@ func StartServer(nodeID, minenode string) {
 
 	bc := GetBlockchain(nodeID)
 
-	if nodeID != nodesOnline[0] {
+	if nodeAddr != nodesOnline[0] {
 		sendVersion(nodesOnline[0], bc)
 	}
 
