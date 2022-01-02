@@ -146,8 +146,8 @@ func (bc *Blockchain) GetBlock(blockHash []byte) (Block, error) {
 	return block, nil
 }
 
-// Add Blockchain
-func (bc *Blockchain) AddBlock(transactions []*Transaction) *Block {
+// Mines a new block
+func (bc *Blockchain) MineBlock(transactions []*Transaction) *Block {
 	var lastHash []byte
 	var lastHeight int
 
@@ -158,7 +158,7 @@ func (bc *Blockchain) AddBlock(transactions []*Transaction) *Block {
 	}
 
 	err := bc.db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte("blocks"))
+		b := tx.Bucket([]byte(blockchainBucket))
 		lastHash = b.Get([]byte(lastBlock))
 
 		block := DeserializeBlock(b.Get(lastHash))
@@ -177,7 +177,7 @@ func (bc *Blockchain) AddBlock(transactions []*Transaction) *Block {
 	}
 
 	err = bc.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte("blocks"))
+		b := tx.Bucket([]byte(blockchainBucket))
 		err := b.Put(newBlock.Hash, newBlock.Serialize())
 		if err != nil {
 			log.Panic(err)
@@ -199,6 +199,40 @@ func (bc *Blockchain) AddBlock(transactions []*Transaction) *Block {
 	}
 
 	return newBlock
+}
+
+// Add the block that I reveived into the local blockchain
+func (bc *Blockchain) AddBlock(block *Block) {
+	err := bc.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(blockchainBucket))
+		blockInDb := b.Get(block.Hash)
+		if blockInDb != nil {
+			fmt.Println("Block already exist.")
+			return nil
+		}
+
+		err := b.Put(block.Hash, block.Serialize())
+		if err != nil {
+			log.Panic(err)
+		}
+
+		lastHash := b.Get([]byte(lastBlock))
+		highestBlockData := b.Get(lastHash)
+		highestBlock := DeserializeBlock(highestBlockData)
+
+		// Check foreign Block's height
+		if block.Height > highestBlock.Height {
+			err = b.Put([]byte(lastBlock), block.Hash)
+			if err != nil {
+				log.Panic(err)
+			}
+		}
+
+		return nil
+	})
+	if err != nil {
+		log.Panic(err)
+	}
 }
 
 // Blockchain iterator

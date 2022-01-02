@@ -142,8 +142,10 @@ func handleInv(request []byte) {
 	fmt.Printf("Recevied %d %s\n", len(payload.Items), payload.Type)
 
 	if payload.Type == "blocks" {
-		blockHash := payload.Items[0]
-		sendGetData(payload.From, "block", blockHash)
+		for _, blockHash := range payload.Items {
+			sendGetData(payload.From, "block", blockHash)
+		}
+		// blockHash := payload.Items[0]
 	}
 }
 
@@ -162,6 +164,7 @@ func handleBlock(request []byte, bc *Blockchain) {
 	fmt.Println("Recevied a new block")
 	fmt.Println(block)
 
+	bc.AddBlock(block)
 	UTXOSet := UTXOSet{bc}
 	UTXOSet.Update(block)
 }
@@ -189,8 +192,10 @@ func handleGetData(request []byte, bc *Blockchain) {
 	}
 
 	if payload.Type == "block" {
+		fmt.Println(payload.ID)
 		block, err := bc.GetBlock([]byte(payload.ID))
 		if err != nil {
+			fmt.Println("Err on getblock ::: ", err)
 			return
 		}
 

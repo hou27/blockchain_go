@@ -16,7 +16,7 @@ func (cli *Cli) send(from, to string, amount int, nodeID string) {
 	UTXOSet := UTXOSet{bc}
 	tx := NewUTXOTransaction(from, to, amount, &UTXOSet, nodeID)
 	rewardTx := NewCoinbaseTX(from, "Mining reward")
-	newBlock := bc.AddBlock([]*Transaction{rewardTx, tx})
+	newBlock := bc.MineBlock([]*Transaction{rewardTx, tx})
 	UTXOSet.Update(newBlock)
 	fmt.Println("Send Complete!!")
 }
@@ -42,8 +42,8 @@ func (cli *Cli) showBlocks(nodeID string) {
 	for {
 		block := bcI.getNextBlock()
 		pow := NewProofOfWork(block)
-
-		fmt.Println("\nTimeStamp:", block.TimeStamp)
+		fmt.Println("-------------------------------------------------")
+		fmt.Println("TimeStamp:", block.TimeStamp)
 		for index := range block.Transactions {
 			fmt.Println("Transactions: ")
 			fmt.Printf(" ID: %v\n", block.Transactions[index].ID)
@@ -55,6 +55,7 @@ func (cli *Cli) showBlocks(nodeID string) {
 		fmt.Printf("Prev Hash: %x\n", block.PrevHash)
 		fmt.Printf("Nonce: %d\n", block.Nonce)
 		fmt.Printf("is Validated: %s\n", strconv.FormatBool(pow.Validate()))
+		fmt.Println("-------------------------------------------------")
 
 		if len(block.PrevHash) == 0 {
 			break
