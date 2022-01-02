@@ -21,6 +21,7 @@ func (cli *Cli) send(from, to string, amount int, nodeID string, mineStart bool)
 		newBlock := bc.MineBlock([]*Transaction{rewardTx, tx})
 		UTXOSet.Update(newBlock)
 	} else {
+		fmt.Println("before ::: ", tx)
 		sendTx(":3000", tx)
 	}
 
@@ -111,7 +112,7 @@ func (cli *Cli) showAddresses(nodeID string) {
 
 func (cli *Cli) printUsage() {
 	fmt.Printf("How to use:\n\n")
-	fmt.Println("  send -from FROM -to TO -amount AMOUNT -mine - send AMOUNT of coins from FROM address to TO. If there is a mine flag, then mine myself")
+	fmt.Println("  send -from FROM -to TO -amount AMOUNT -mine - send AMOUNT of coins from FROM address to TO. If there is a mine flag, then mine by myself")
 	fmt.Println("  createblockchain -address ADDRESS - create new blockchain")
 	fmt.Println("  showblocks - print all the blocks of the blockchain")
 	fmt.Println("  getbalance -address ADDRESS - Get balance of ADDRESS")

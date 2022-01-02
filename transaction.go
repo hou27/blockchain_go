@@ -300,8 +300,8 @@ func DeserializeTxs(data []byte) []TXOutput {
 }
 
 // Deserializes a transaction
-func DeserializeTx(data []byte) Transaction {
-	var writer Transaction
+func DeserializeTx(data []byte) *Transaction {
+	var writer *Transaction
 
 	decoder := gob.NewDecoder(bytes.NewReader(data))
 	err := decoder.Decode(&writer)

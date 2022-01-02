@@ -184,8 +184,15 @@ func handleTx(request []byte, bc *Blockchain) {
 
 	txData := payload.Tx
 	tx := DeserializeTx(txData)
-	mempool[hex.EncodeToString(tx.ID)] = tx
+	fmt.Println("after ::: ", tx)
+	if !bc.VerifyTransaction(tx) {
+		fmt.Println("why not")
+	} else {
+		fmt.Println("Verified.")
+	}
+	mempool[hex.EncodeToString(tx.ID)] = *tx
 
+	fmt.Println(nodesOnline, len(mineNode), len(mempool))
 	if nodeAddr == nodesOnline[0] {
 		for _, node := range nodesOnline {
 			if node != nodeAddr && node != payload.From {
@@ -193,19 +200,42 @@ func handleTx(request []byte, bc *Blockchain) {
 			}
 		}
 	} else {
-		if len(mempool) >= 2 && len(mineNode) > 0 {
+		if len(mempool) >= 1 && len(mineNode) > 0 {
+		MineTxs:
 			var txs []*Transaction
 
-			for _, tx := range mempool {
-				txs = append(txs, &tx)
-			}
-			rewardTx := NewCoinbaseTX(payload.From, "Mining reward")
+			for id := range mempool {
+                tx := mempool[id]
+                if bc.VerifyTransaction(&tx) {
+                    txs = append(txs, &tx)
+                }
+            }
+
+            if len(txs) == 0 {
+                fmt.Println("There's no valid Transaction...")
+                return
+            }
+
+			rewardTx := NewCoinbaseTX(mineNode, "Mining reward")
 			txs = append(txs, rewardTx)
 			newBlock := bc.MineBlock(txs)
 			UTXOSet := UTXOSet{bc}
 			UTXOSet.Update(newBlock)
 
-			mempool = make(map[string]Transaction)
+			for _, tx := range txs {
+                txID := hex.EncodeToString(tx.ID)
+                delete(mempool, txID)
+            }
+
+            for _, node := range nodesOnline {
+                if node != nodeAddr {
+                    sendInv(node, "block", [][]byte{newBlock.Hash})
+                }
+            }
+
+			if len(mempool) > 0 {
+                goto MineTxs
+            }
 		}
 	}
 }
@@ -262,8 +292,7 @@ func handleGetData(request []byte, bc *Blockchain) {
 
 		sendBlock(payload.From, &block)
 	} else if payload.Type == "tx" {
-		txID := hex.EncodeToString(payload.ID)
-		tx := mempool[txID]
+		tx := mempool[hex.EncodeToString(payload.ID)]
 
 		sendTx(payload.From, &tx)
 	}
@@ -272,14 +301,22 @@ func handleGetData(request []byte, bc *Blockchain) {
 func handleVersion(request []byte, bc *Blockchain) {
 	payload := Version{}
 
-	if nodeAddr == nodesOnline[0] {
-		nodesOnline = append(nodesOnline, nodeAddr)
-	}
-
 	dec := returnDecoder(request)
 	err := dec.Decode(&payload)
 	if err != nil {
 		log.Panic(err)
+	}
+
+	if nodeAddr == nodesOnline[0] {
+		chkFlag := false
+		for _, node := range nodesOnline {
+			if node == payload.From {
+				chkFlag = !chkFlag
+			}
+		}
+		if !chkFlag {
+			nodesOnline = append(nodesOnline, payload.From)
+		}		
 	}
 
 	myBestHeight := bc.getBestHeight()
