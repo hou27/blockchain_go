@@ -211,6 +211,8 @@ func (bc *Blockchain) AddBlock(block *Block) {
 			return nil
 		}
 
+		fmt.Println(block.Serialize())
+		fmt.Println(DeserializeBlock(block.Serialize()))
 		err := b.Put(block.Hash, block.Serialize())
 		if err != nil {
 			log.Panic(err)
@@ -222,7 +224,7 @@ func (bc *Blockchain) AddBlock(block *Block) {
 
 		// Check foreign Block's height
 		if block.Height > highestBlock.Height {
-			err = b.Put(lastHash, block.Hash)
+			err = b.Put([]byte(lastBlock), block.Hash)
 			if err != nil {
 				log.Panic(err)
 			}

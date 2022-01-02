@@ -163,7 +163,8 @@ func handleBlock(request []byte, bc *Blockchain) {
 	fmt.Println("Recevied a new block")
 	fmt.Println(block)
 
-	bc.AddBlock(block)
+	bc.MineBlock(block.Transactions)
+	// bc.AddBlock(block)
 	UTXOSet := UTXOSet{bc}
 	UTXOSet.Update(block)
 }
