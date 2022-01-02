@@ -221,7 +221,6 @@ func (tx *Transaction) Verify(prevTXs map[string]Transaction) bool {
 		abbreviatedTx.Vin[inId].ScriptSig = &ScriptSig{}
 		abbreviatedTx.Vin[inId].ScriptSig.PublicKey = prevTx.Vout[vin.TxoutIdx].ScriptPubKey
 		abbreviatedTx.SetID()
-		abbreviatedTx.Vin[inId].ScriptSig.PublicKey = nil
 
 		sigLen := len(vin.ScriptSig.Signature)
 		keyLen := len(vin.ScriptSig.PublicKey)
@@ -237,10 +236,11 @@ func (tx *Transaction) Verify(prevTXs map[string]Transaction) bool {
 		x.SetBytes(vin.ScriptSig.PublicKey[:(keyLen / 2)])
 		y.SetBytes(vin.ScriptSig.PublicKey[(keyLen / 2):])
 
-		rawPublicKey := &ecdsa.PublicKey{curve, &x, &y}
+		rawPublicKey := &ecdsa.PublicKey{Curve: curve, X: &x, Y: &y}
 		if !ecdsa.Verify(rawPublicKey, abbreviatedTx.ID, &r, &s) {
 			return false
 		}
+		abbreviatedTx.Vin[inId].ScriptSig.PublicKey = nil
 	}
 	return true
 }
