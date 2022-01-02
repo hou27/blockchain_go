@@ -145,7 +145,6 @@ func handleInv(request []byte) {
 		for _, blockHash := range payload.Items {
 			sendGetData(payload.From, "block", blockHash)
 		}
-		// blockHash := payload.Items[0]
 	}
 }
 
@@ -192,7 +191,6 @@ func handleGetData(request []byte, bc *Blockchain) {
 	}
 
 	if payload.Type == "block" {
-		fmt.Println(payload.ID)
 		block, err := bc.GetBlock([]byte(payload.ID))
 		if err != nil {
 			fmt.Println("Err on getblock ::: ", err)

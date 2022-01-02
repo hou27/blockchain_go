@@ -205,8 +205,8 @@ func (bc *Blockchain) MineBlock(transactions []*Transaction) *Block {
 func (bc *Blockchain) AddBlock(block *Block) {
 	err := bc.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(blockchainBucket))
-		blockInDb := b.Get(block.Hash)
-		if blockInDb != nil {
+		localBlock := b.Get(block.Hash)
+		if localBlock != nil {
 			fmt.Println("Block already exist.")
 			return nil
 		}
@@ -222,7 +222,7 @@ func (bc *Blockchain) AddBlock(block *Block) {
 
 		// Check foreign Block's height
 		if block.Height > highestBlock.Height {
-			err = b.Put([]byte(lastBlock), block.Hash)
+			err = b.Put(lastHash, block.Hash)
 			if err != nil {
 				log.Panic(err)
 			}
@@ -263,7 +263,7 @@ func (bcI *BlockchainIterator) getNextBlock() *Block {
 	var block *Block
 
 	err := bcI.db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte("blocks"))
+		b := tx.Bucket([]byte(blockchainBucket))
 		encodedBlock := b.Get(bcI.currentHash)
 		block = DeserializeBlock(encodedBlock)
 
@@ -281,7 +281,7 @@ func (bc Blockchain) getBestHeight() int {
 	var lastHeight int
 
 	err := bc.db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte("blocks"))
+		b := tx.Bucket([]byte(blockchainBucket))
 		lastHash := b.Get([]byte(lastBlock))
 
 		block := DeserializeBlock(b.Get(lastHash))
