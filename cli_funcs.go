@@ -9,14 +9,20 @@ import (
 	"github.com/btcsuite/btcutil/base58"
 )
 
-func (cli *Cli) send(from, to string, amount int, nodeID string) {
+func (cli *Cli) send(from, to string, amount int, nodeID string, mineStart bool) {
 	bc := GetBlockchain(nodeID)
 	defer bc.db.Close()
 
 	UTXOSet := UTXOSet{bc}
 	tx := NewUTXOTransaction(from, to, amount, &UTXOSet, nodeID)
 	
-	sendTx(":3000", tx)
+	if mineStart {
+		rewardTx := NewCoinbaseTX(from, "Mining reward")
+		newBlock := bc.MineBlock([]*Transaction{rewardTx, tx})
+		UTXOSet.Update(newBlock)
+	} else {
+		sendTx(":3000", tx)
+	}
 
 	fmt.Println("Send Complete!!")
 }
@@ -105,7 +111,7 @@ func (cli *Cli) showAddresses(nodeID string) {
 
 func (cli *Cli) printUsage() {
 	fmt.Printf("How to use:\n\n")
-	fmt.Println("  send -from FROM -to TO -amount AMOUNT - send AMOUNT of coins from FROM address to TO")
+	fmt.Println("  send -from FROM -to TO -amount AMOUNT -mine - send AMOUNT of coins from FROM address to TO. If there is a mine flag, then mine myself")
 	fmt.Println("  createblockchain -address ADDRESS - create new blockchain")
 	fmt.Println("  showblocks - print all the blocks of the blockchain")
 	fmt.Println("  getbalance -address ADDRESS - Get balance of ADDRESS")
