@@ -16,7 +16,7 @@ How to use:
   getbalance -address ADDRESS - Get balance of ADDRESS
   createwallet - Create your Wallet
   showaddresses - Show all addresses
-  startnode -minenode ADDRESS - Start a node with NODE_ID
+  startnode -minenode ADDRESS - Start a node with NODE_ID. If there is a minenode flag, that node will be minenode
 ```
 
 - Proof-of-Work
