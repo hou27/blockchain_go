@@ -34,14 +34,14 @@ func sendData(dest string, data []byte) {
 
 func sendVersion(dest string, bc *Blockchain) {
 	bestHeight := bc.getBestHeight()
-	payload := GobEncode(Version{nodeVersion, bestHeight, nodeAddr, dest})
+	payload := GobEncode(Version{nodeVersion, bestHeight, nodeAddr})
 
 	request := append(commandToBytes("version"), payload...)
 	sendData(dest, request)
 }
 
 func sendInv(dest, kind string, items [][]byte) {
-	inven := Inv{kind, items, nodeAddr, dest}
+	inven := Inv{kind, items, nodeAddr}
 	payload := GobEncode(inven)
 	request := append(commandToBytes("inv"), payload...)
 

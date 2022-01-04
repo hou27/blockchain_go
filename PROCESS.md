@@ -13,3 +13,4 @@
 |    9    |            sendTx to 3002             |        -         |                  -                   |
 |   10    |                   -                   |        -         | sendInv(block, newblockHash) to 3000 |
 |   11    | sendGetData(block, blockHash) to 3002 |        -         |                  -                   |
+|   12    |                   -                   |        -         |      sendBlock(&block) to 3000       |

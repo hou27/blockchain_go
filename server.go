@@ -27,7 +27,6 @@ type Version struct {
 	Version 	int
 	BlockHeight int
 	From		string
-	To			string
 }
 
 // "I have these blocks/transactions: ..."
@@ -37,7 +36,6 @@ type Inv struct {
 	Type	string
 	Items	[][]byte
 	From	string
-	To		string
 }
 
 type block struct {

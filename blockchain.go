@@ -211,8 +211,6 @@ func (bc *Blockchain) AddBlock(block *Block) {
 			return nil
 		}
 
-		fmt.Println(block.Serialize())
-		fmt.Println(DeserializeBlock(block.Serialize()))
 		err := b.Put(block.Hash, block.Serialize())
 		if err != nil {
 			log.Panic(err)
@@ -235,6 +233,8 @@ func (bc *Blockchain) AddBlock(block *Block) {
 	if err != nil {
 		log.Panic(err)
 	}
+
+	fmt.Println("Added the received block successfully.")
 }
 
 // Blockchain iterator
