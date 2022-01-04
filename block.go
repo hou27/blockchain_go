@@ -52,7 +52,7 @@ func (b *Block) Serialize() []byte {
 	encoder := gob.NewEncoder(&writer)
 	err := encoder.Encode(b)
 	if err != nil {
-		log.Fatal("Encode Error:", err)
+		log.Panic("Encode Error:", err)
 	}
 
 	return writer.Bytes()
@@ -65,7 +65,7 @@ func DeserializeBlock(d []byte) *Block {
 	dec := gob.NewDecoder(bytes.NewReader(d))
 	err := dec.Decode(&block)
 	if err != nil {
-		log.Fatal("Decode Error:", err)
+		log.Panic("Decode Error:", err)
 	}
 
 	return &block
