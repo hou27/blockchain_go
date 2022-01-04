@@ -19,7 +19,7 @@ func handleInv(request []byte) {
 
 	fmt.Printf("Recevied %d %s\n", len(payload.Items), payload.Type)
 
-	if payload.Type == "blocks" {
+	if payload.Type == "block" {
 		for _, blockHash := range payload.Items {
 			sendGetData(payload.From, "block", blockHash)
 		}
@@ -52,7 +52,7 @@ func handleTx(request []byte, bc *Blockchain) {
 			}
 		}
 	} else {
-		if len(mempool) >= 1 && len(mineNode) > 0 {
+		if len(mempool) >= 2 && len(mineNode) > 0 {
 		MineTxs:
 			var txs []*Transaction
 

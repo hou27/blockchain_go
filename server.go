@@ -86,8 +86,6 @@ func bytesToCommand(bytes []byte) string {
 	return string(command[:])
 }
 
-
-
 // Starts a node
 func StartServer(nodeID, minenode string) {
 	nodeAddr = fmt.Sprintf(":%s", nodeID)

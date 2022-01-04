@@ -60,6 +60,7 @@ func (cli *Cli) showBlocks(nodeID string) {
 		fmt.Printf("Hash: %x\n", block.Hash)
 		fmt.Printf("Prev Hash: %x\n", block.PrevHash)
 		fmt.Printf("Nonce: %d\n", block.Nonce)
+		fmt.Printf("Height: %d\n", block.Height)
 		fmt.Printf("is Validated: %s\n", strconv.FormatBool(pow.Validate()))
 		fmt.Println("-------------------------------------------------")
 

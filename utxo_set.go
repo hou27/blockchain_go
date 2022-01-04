@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/hex"
+	"fmt"
 	"log"
 
 	"github.com/boltdb/bolt"
@@ -109,6 +110,7 @@ func (u UTXOSet) Update(block *Block) {
 				for _, vin := range tx.Vin {
 					var newOuts []TXOutput
 					data := b.Get(vin.Txid)
+					fmt.Println(data)
 					outs := DeserializeTxs(data)
 
 					for outIdx, out := range outs {
