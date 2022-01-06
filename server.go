@@ -91,7 +91,7 @@ func StartServer(nodeID, minenode string) {
 
 	if len(minenode) > 0 {
 		mineNode = minenode
-		fmt.Println("Now mining is on. Address ::: ", mineNode)
+		fmt.Println("Now mining is on. Miner ::: ", mineNode)
 	}
 
 	// Creates servers

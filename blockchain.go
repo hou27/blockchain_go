@@ -220,7 +220,6 @@ func (bc *Blockchain) AddBlock(block *Block) {
 		highestBlockData := b.Get(lastHash)
 		highestBlock := DeserializeBlock(highestBlockData)
 
-		fmt.Println("height compare -> ", block.Height, highestBlock.Height)
 		// Check foreign Block's height
 		if block.Height > highestBlock.Height {
 			err = b.Put([]byte(lastBlock), block.Hash)

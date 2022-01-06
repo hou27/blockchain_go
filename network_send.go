@@ -61,7 +61,7 @@ func sendBlock(dest string, b *Block) {
 	payload := GobEncode(data)
 	request := append(commandToBytes("block"), payload...)
 
-	fmt.Println("Send Block ::: ", b)
+	fmt.Println("Send Block ::: ", b.Hash)
 	sendData(dest, request)
 }
 
