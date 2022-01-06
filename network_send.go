@@ -25,7 +25,6 @@ func sendData(dest string, data []byte) {
 	}
 	defer conn.Close()
 
-	// fmt.Printf("%x\n", data)
 	_, err = io.Copy(conn, bytes.NewReader(data))
 	if err != nil {
 		log.Panic(err)
