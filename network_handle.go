@@ -19,7 +19,7 @@ func handleInv(request []byte) {
 
 	fmt.Printf("Recevied %d %s\n", len(payload.Items), payload.Type)
 
-	if payload.Type == "block" {
+	if payload.Type == "blocks" {
 		for _, blockHash := range payload.Items {
 			sendGetData(payload.From, "block", blockHash)
 		}
@@ -81,7 +81,7 @@ func handleTx(request []byte, bc *Blockchain) {
 
             for _, node := range nodesOnline {
                 if node != nodeAddr {
-                    sendInv(node, "block", [][]byte{newBlock.Hash})
+                    sendInv(node, "blocks", [][]byte{newBlock.Hash})
                 }
             }
 

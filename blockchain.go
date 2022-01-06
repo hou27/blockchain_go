@@ -266,7 +266,9 @@ func (bcI *BlockchainIterator) getNextBlock() *Block {
 
 	err := bcI.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(blockchainBucket))
+		fmt.Println("currentHash ::: ", bcI.currentHash)
 		encodedBlock := b.Get(bcI.currentHash)
+		fmt.Println("encodedBlock ::: ", encodedBlock)
 		block = DeserializeBlock(encodedBlock)
 
 		return nil
