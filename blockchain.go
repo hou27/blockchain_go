@@ -220,12 +220,14 @@ func (bc *Blockchain) AddBlock(block *Block) {
 		highestBlockData := b.Get(lastHash)
 		highestBlock := DeserializeBlock(highestBlockData)
 
+		fmt.Println("height compare -> ", block.Height, highestBlock.Height)
 		// Check foreign Block's height
 		if block.Height > highestBlock.Height {
 			err = b.Put([]byte(lastBlock), block.Hash)
 			if err != nil {
 				log.Panic(err)
 			}
+			bc.last = block.Hash
 		}
 
 		return nil
@@ -245,13 +247,17 @@ func (bc *Blockchain) Iterator() *BlockchainIterator {
 }
 
 // Returns a list of hashes of all the blocks
-func (bc *Blockchain) GetBlockHashes() [][]byte {
+func (bc *Blockchain) GetBlockHashes(height int) [][]byte {
 	var blocks [][]byte
 	bcI := bc.Iterator()
 
 	for {
 		block := bcI.getNextBlock()
-		blocks = append(blocks, block.Hash)
+		if block.Height > height {
+			blocks = append(blocks, block.Hash)
+		} else {
+			break
+		}
 
 		if len(block.PrevHash) == 0 {
 			break
@@ -266,9 +272,7 @@ func (bcI *BlockchainIterator) getNextBlock() *Block {
 
 	err := bcI.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(blockchainBucket))
-		fmt.Println("currentHash ::: ", bcI.currentHash)
 		encodedBlock := b.Get(bcI.currentHash)
-		fmt.Println("encodedBlock ::: ", encodedBlock)
 		block = DeserializeBlock(encodedBlock)
 
 		return nil

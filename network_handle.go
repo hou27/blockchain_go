@@ -119,7 +119,7 @@ func handleGetBlocks(request []byte, bc *Blockchain) {
 		log.Panic(err)
 	}
 
-	blocks := bc.GetBlockHashes()
+	blocks := bc.GetBlockHashes(payload.Height)
 	sendInv(payload.From, "blocks", blocks)
 }
 
@@ -174,7 +174,7 @@ func handleVersion(request []byte, bc *Blockchain) {
 	if myBestHeight > foreignerBestHeight {
 		sendVersion(payload.From, bc)
 	} else if myBestHeight < foreignerBestHeight {
-		sendGetBlocks(payload.From)
+		sendGetBlocks(payload.From, myBestHeight)
 	}
 }
 

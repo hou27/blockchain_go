@@ -61,11 +61,12 @@ func sendBlock(dest string, b *Block) {
 	payload := GobEncode(data)
 	request := append(commandToBytes("block"), payload...)
 
+	fmt.Println("Send Block ::: ", b)
 	sendData(dest, request)
 }
 
-func sendGetBlocks(dest string) {
-	payload := GobEncode(getblocks{nodeAddr})
+func sendGetBlocks(dest string, myBestHeight int) {
+	payload := GobEncode(getblocks{nodeAddr, myBestHeight})
 	request := append(commandToBytes("getblocks"), payload...)
 
 	sendData(dest, request)

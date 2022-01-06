@@ -53,6 +53,7 @@ type tx struct {
 // It isn't bringing all the blocks, but requesting a hash list of blocks.
 type getblocks struct {
 	From	string
+	Height	int
 }
 
 // Request a single block or transaction by hash.
