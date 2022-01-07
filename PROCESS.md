@@ -19,5 +19,5 @@
 |   15    |          sendVersion to 3001          |                                 -                                 |                  -                   |
 |   16    |                   -                   |                       sendGetBlocks to 3000                       |                  -                   |
 |   17    | sendInv(blocks, block hashes) to 3001 |                                 -                                 |                  -                   |
-|   18    |                   -                   | sendGetData(blocks, blockHash) to 3000<br>( X len(payload.Items)) |                  -                   |
+|   18    |                   -                   | sendGetData(blocks, blockHash) to 3000<br>( × len(payload.Items)) |                  -                   |
 |   19    |       sendBlock(&block) to 3001       |                                 -                                 |                  -                   |
