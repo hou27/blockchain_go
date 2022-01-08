@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/gob"
+	"fmt"
 	"log"
 	"time"
 )
@@ -28,8 +29,9 @@ func NewBlock(transactions []*Transaction, prevHash []byte, height int) *Block {
 	pow := NewProofOfWork(newblock)
 	nonce, hash := pow.Run()
 
-	newblock.Hash = hash[:]
+	newblock.Hash = hash
 	newblock.Nonce = nonce
+
 	return newblock
 }
 
@@ -37,10 +39,20 @@ func NewBlock(transactions []*Transaction, prevHash []byte, height int) *Block {
 func (b *Block) HashTransactions() []byte {
 	var transactions [][]byte
 
+	fmt.Println("length ::: ", len(b.Transactions))
+	for _, tx := range b.Transactions {
+		fmt.Println("Transactions: ")
+		fmt.Printf(" ID: %v\n", tx.ID)
+		fmt.Printf(" Vin: %v\n", tx.Vin[0])
+		fmt.Printf("    .ScriptSig: %v\n", tx.Vin[0].ScriptSig)
+		fmt.Printf(" Vout: %v\n", tx.Vout)
+	}
 	for _, tx := range b.Transactions {
 			transactions = append(transactions, tx.Serialize())
+			fmt.Printf("tx.serialize in hash Tx %x\n", tx.Serialize())
 	}
 	mTree := NewMerkleTree(transactions)
+	fmt.Println("merkleRoot ::: ", mTree.merkleRoot)
 	
 	return mTree.merkleRoot
 }

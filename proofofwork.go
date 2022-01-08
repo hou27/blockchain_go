@@ -46,12 +46,13 @@ func (pow *ProofOfWork) Run() (int, []byte) {
 	var hash [32]byte
 	nonce := 0
 	for nonce < maxNonce {
-		data := pow.prepareData(nonce)
-		hash = sha256.Sum256(data)
+		hash = sha256.Sum256(
+			pow.prepareData(nonce),
+		)
 		fmt.Printf("\r%x", hash)
-
 		hashInt.SetBytes(hash[:])
 		if hashInt.Cmp(pow.target) == -1 {
+			// fmt.Printf("HashTransactions in Run : %x\n", pow.block.HashTransactions())
 			fmt.Println()
 			break
 		} else {
@@ -69,7 +70,7 @@ func (pow *ProofOfWork) Validate() bool {
 		pow.prepareData(pow.block.Nonce),
 	)
 	hashInt.SetBytes(hash[:])
-
+	// fmt.Printf("HashTransactions in Validate : %x\n", pow.block.HashTransactions())
 	isValid := hashInt.Cmp(pow.target) == -1
 	return isValid
 }
