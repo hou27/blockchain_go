@@ -27,7 +27,7 @@ type Blockchain struct {
 
 var Bc *Blockchain
 var once sync.Once
-var errNotValid = errors.New("Can't add this block")
+var errNotValid = errors.New("can't add this block")
 
 func (bc *Blockchain) validateStructure(newBlock Block) error {
 	validate := validator.New()
@@ -86,11 +86,11 @@ func (bc *Blockchain) AddBlock(data string) {
 			fmt.Println(isValidated)
 		} else {
 			bc.blocks = append(GetBlockchain().blocks, newBlock)
-			fmt.Println("Added")
+			fmt.Println(" Added")
 		}
 	} else {
 		bc.blocks = append(GetBlockchain().blocks, newBlock)
-		fmt.Println("Added")
+		fmt.Println(" Added")
 	}
 }
 
