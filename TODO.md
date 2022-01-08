@@ -1,6 +1,7 @@
 # TODO
 
 - [ ] Post on blog
+- [ ] Control Merkle Tree
 - [ ] Implement Resolve Conflict
 - [ ] Implement nodes - SPV(Simplified Payment Verification) node
 
