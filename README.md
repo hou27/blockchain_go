@@ -19,7 +19,7 @@ How to use:
   startnode -minenode ADDRESS - Start a node with NODE_ID. If there is a minenode flag, that node will be minenode
 ```
 
-- Proof-of-Work
+- [Proof-of-Work](https://hou27.tistory.com/6)
 - persistence-and-cli
 - Transactions
 - Addresses
