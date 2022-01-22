@@ -1,11 +1,8 @@
 package main
 
 import (
-	"bytes"
-	"encoding/gob"
 	"errors"
 	"fmt"
-	"log"
 	"strconv"
 	"sync"
 	"time"
@@ -105,30 +102,4 @@ func (bc Blockchain) ShowBlocks() {
 		fmt.Printf("Prev Hash: %d\n", block.Nonce)
 		fmt.Printf("is Validated: %s\n", strconv.FormatBool(pow.Validate()))
 	}
-}
-
-// Serialize before sending
-func (b *Block) Serialize() []byte {
-	var network bytes.Buffer
-
-	encoder := gob.NewEncoder(&network)
-	err := encoder.Encode(b)
-	if err != nil {
-		log.Fatal("Encode Error:", err)
-	}
-
-	return network.Bytes()
-}
-
-// Deserialize block(not a method)
-func DeserializeBlock(d []byte) *Block {
-	var block Block
-
-	decoder := gob.NewDecoder(bytes.NewReader(d))
-	err := decoder.Decode(&block)
-	if err != nil {
-		log.Fatal("Decode Error:", err)
-	}
-
-	return &block
 }
