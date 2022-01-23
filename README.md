@@ -20,7 +20,7 @@ How to use:
 ```
 
 - [Proof-of-Work](https://hou27.tistory.com/6)
-- persistence-and-cli
+- [persistence-and-cli](https://hou27.tistory.com/7)
 - Transactions
 - Addresses
 - UTXO Set
