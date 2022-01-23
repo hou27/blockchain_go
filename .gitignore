@@ -1,3 +1,7 @@
+*.db
+*.txt
+*.dat
+
 # Binaries for programs and plugins
 *.exe
 *.exe~
