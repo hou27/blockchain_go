@@ -8,9 +8,7 @@ import (
 	"strconv"
 )
 
-type Cli struct {
-	bc *Blockchain
-}
+type Cli struct {}
 
 // Run CLI
 func (cli *Cli) Active() {

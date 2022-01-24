@@ -11,7 +11,7 @@ import (
 )
 
 const maxNonce = math.MaxInt64
-var targetBits = 1
+var targetBits = 6
 
 type ProofOfWork struct {
 	block *Block

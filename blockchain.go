@@ -2,12 +2,10 @@ package main
 
 import (
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"log"
 
 	"github.com/boltdb/bolt"
-	"github.com/go-playground/validator"
 )
 
 type Blockchain struct {
@@ -23,20 +21,6 @@ type BlockchainIterator struct {
 const dbFile = "houchain_%s.db"
 
 var Bc *Blockchain
-var errNotValid = errors.New("Can't add this block")
-
-func (bc *Blockchain) validateStructure(newBlock Block) error {
-	validate := validator.New()
-
-	err := validate.Struct(newBlock)
-	if err != nil {
-		for _, err := range err.(validator.ValidationErrors) {
-			fmt.Println(err)
-		}
-		return errNotValid
-	}
-	return nil
-}
 
 // Get All Blockchains
 func GetBlockchain(address string) *Blockchain {
@@ -172,7 +156,7 @@ func (bc *Blockchain) FindUnspentTxs(address string) []*Transaction {
 				}
 			}
 			
-			if tx.IsCoinbase() == false {
+			if !tx.IsCoinbase() {
 				for _, in := range tx.Txin {
 					if in.ScriptSig == address {
 						inTxID := hex.EncodeToString(in.Txid)
