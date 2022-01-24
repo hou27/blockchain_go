@@ -71,15 +71,15 @@ func GetBlockchain() *Blockchain {
 			genesis := generateGenesis()
 			b, err := tx.CreateBucket([]byte("blocks"))
 			if err != nil {
-				log.Fatal(err)
+				return err
 			}
 			err = b.Put(genesis.Hash, genesis.Serialize())
 			if err != nil {
-				log.Fatal(err)
+				return err
 			}
 			err = b.Put([]byte("last"), genesis.Hash)
 			if err != nil {
-				log.Fatal(err)
+				return err
 			}
 			last = genesis.Hash
 		} else {
