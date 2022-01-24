@@ -3,15 +3,12 @@ package main
 import (
 	"bytes"
 	"encoding/gob"
-	"errors"
 	"fmt"
 	"log"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/boltdb/bolt"
-	"github.com/go-playground/validator"
 )
 
 type Block struct {
@@ -35,21 +32,6 @@ type BlockchainTmp struct {
 const dbFile = "houchain_%s.db"
 
 var Bc *Blockchain
-var once sync.Once
-var errNotValid = errors.New("Can't add this block")
-
-func (bc *Blockchain) validateStructure(newBlock Block) error {
-	validate := validator.New()
-
-	err := validate.Struct(newBlock)
-	if err != nil {
-		for _, err := range err.(validator.ValidationErrors) {
-			fmt.Println(err)
-		}
-		return errNotValid
-	}
-	return nil
-}
 
 func generateGenesis() *Block {
 	return NewBlock("Genesis Block", []byte{})
@@ -140,6 +122,9 @@ func (bc *Blockchain) AddBlock(data string) {
 
 		return nil
 	})
+	if err != nil {
+		log.Panic(err)
+	}
 }
 
 // Show Blockchains
