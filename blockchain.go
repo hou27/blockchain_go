@@ -132,7 +132,7 @@ func (bc Blockchain) ShowBlocks() {
 	bcT := bc.Iterator()
 	
 	for {
-		block := bcT.GetNextBlock()
+		block := bcT.getNextBlock()
 		pow := NewProofOfWork(block)
 
 		fmt.Println("\nTimeStamp:", block.TimeStamp)
@@ -149,13 +149,14 @@ func (bc Blockchain) ShowBlocks() {
 	}
 }
 
+// Blockchain iterator
 func (bc *Blockchain) Iterator() *BlockchainTmp {
 	bcT := &BlockchainTmp{bc.db, bc.last}
  
 	return bcT
 }
 
-func (bct *BlockchainTmp) GetNextBlock() *Block {
+func (bct *BlockchainTmp) getNextBlock() *Block {
 	var block *Block
 
 	err := bct.db.View(func(tx *bolt.Tx) error {
