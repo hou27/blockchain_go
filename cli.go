@@ -52,6 +52,6 @@ func (cli *Cli) Active() {
 
 func (cli *Cli) printUsage() {
 	fmt.Printf("How to use:\n\n")
-	fmt.Println("  addblock DATA - add a block to the blockchain")
+	fmt.Println("  addblock -data DATA - add a block to the blockchain")
 	fmt.Println("  showblocks - print all the blocks of the blockchain")
 }
