@@ -51,6 +51,7 @@ func GetBlockchain() *Blockchain {
 		bc := tx.Bucket([]byte("blocks"))
 		if bc == nil {
 			genesis := generateGenesis()
+			fmt.Println("Generate Genesis block")
 			b, err := tx.CreateBucket([]byte("blocks"))
 			if err != nil {
 				return err
