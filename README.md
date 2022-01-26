@@ -21,7 +21,7 @@ How to use:
 
 - [Proof-of-Work](https://hou27.tistory.com/6)
 - [persistence-and-cli](https://hou27.tistory.com/7)
-- Transactions -> Posting is ongoing.
+- [Transactions](https://hou27.tistory.com/8)
 - Addresses
 - UTXO Set
 - Merkle Tree
