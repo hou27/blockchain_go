@@ -58,11 +58,10 @@ func NewCoinbaseTX(to, data string) *Transaction {
 func NewUTXOTransaction(from, to string, amount int, bc *Blockchain) *Transaction {
 	var inputs []TXInput
 	var outputs []TXOutput
-
 	
-	balance, validOutputs := bc.FindUTXOs(from, amount)
+	accumulated, validOutputs := bc.FindUTXOs(from, amount)
 
-	if balance < amount {
+	if accumulated < amount {
 		log.Panic("ERROR: Not enough funds")
 	}
 
@@ -80,8 +79,8 @@ func NewUTXOTransaction(from, to string, amount int, bc *Blockchain) *Transactio
 
 	// Build a list of outputs
 	outputs = append(outputs, TXOutput{amount, to})
-	if balance > amount {
-		outputs = append(outputs, TXOutput{balance - amount, from})
+	if accumulated > amount {
+		outputs = append(outputs, TXOutput{accumulated - amount, from})
 	}
 
 	tx := Transaction{nil, inputs, outputs}
