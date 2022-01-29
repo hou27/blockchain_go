@@ -22,7 +22,7 @@ How to use:
 - [Proof-of-Work](https://hou27.tistory.com/6)
 - [persistence-and-cli](https://hou27.tistory.com/7)
 - [Transactions](https://hou27.tistory.com/8)
-- Addresses
+- [Addresses](https://hou27.tistory.com/9)
 - UTXO Set
 - Merkle Tree
 - P2P Network
