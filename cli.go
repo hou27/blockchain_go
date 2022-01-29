@@ -10,9 +10,7 @@ import (
 	"github.com/btcsuite/btcutil/base58"
 )
 
-type Cli struct {
-	bc *Blockchain
-}
+type Cli struct {}
 
 // Run CLI
 func (cli *Cli) Active() {

@@ -18,7 +18,4 @@ How to use:
   showaddresses - Show all addresses
 ```
 
-- Proof-of-Work
-- persistence-and-cli
-- Transactions
 - Addresses

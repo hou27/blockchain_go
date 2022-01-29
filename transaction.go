@@ -60,12 +60,12 @@ func (tx *Transaction) SetID() {
 func (tI TXInput) Unlock(publicKeyHash []byte) bool {
 	lockingHash := HashPublicKey(tI.ScriptSig.PublicKey)
 
-	return bytes.Compare(lockingHash, publicKeyHash) == 0
+	return bytes.Equal(lockingHash, publicKeyHash)
 }
 
 // Check key
 func (tO TXOutput) IsLockedWithKey(publicKeyHash []byte) bool {
-	return bytes.Compare(tO.ScriptPubKey, publicKeyHash) == 0
+	return bytes.Equal(tO.ScriptPubKey, publicKeyHash)
 }
 
 // Lock with publicKey
@@ -162,7 +162,7 @@ func (tx *Transaction) Sign(privKey ecdsa.PrivateKey, prevTx *Transaction) {
 	}
 
 	for _, vin := range tx.Vin {
-		if bytes.Compare(vin.Txid, prevTx.ID) != 0 {
+		if !bytes.Equal(vin.Txid, prevTx.ID) {
 			log.Panic("It's not the previous Transaction.")
 		}
 	}
@@ -193,7 +193,7 @@ func (tx *Transaction) Verify(prevTx *Transaction) bool {
 	}
 
 	for _, vin := range tx.Vin {
-		if bytes.Compare(vin.Txid, prevTx.ID) != 0 {
+		if !bytes.Equal(vin.Txid, prevTx.ID) {
 			log.Panic("It's not the previous Transaction.")
 		}
 	}
@@ -221,8 +221,8 @@ func (tx *Transaction) Verify(prevTx *Transaction) bool {
 		x.SetBytes(vin.ScriptSig.PublicKey[:(keyLen / 2)])
 		y.SetBytes(vin.ScriptSig.PublicKey[(keyLen / 2):])
 
-		rawPublicKey := &ecdsa.PublicKey{curve, &x, &y}
-		if ecdsa.Verify(rawPublicKey, abbreviatedTx.ID, &r, &s) == false {
+		rawPublicKey := &ecdsa.PublicKey{Curve: curve, X: &x, Y: &y}
+		if !ecdsa.Verify(rawPublicKey, abbreviatedTx.ID, &r, &s) {
 			return false
 		}
 	}

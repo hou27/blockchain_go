@@ -11,7 +11,6 @@ import (
 
 	"github.com/boltdb/bolt"
 	"github.com/btcsuite/btcutil/base58"
-	"github.com/go-playground/validator"
 )
 
 type Blockchain struct {
@@ -27,20 +26,6 @@ type BlockchainIterator struct {
 const dbFile = "houchain_%s.db"
 
 var Bc *Blockchain
-var errNotValid = errors.New("Can't add this block")
-
-func (bc *Blockchain) validateStructure(newBlock Block) error {
-	validate := validator.New()
-
-	err := validate.Struct(newBlock)
-	if err != nil {
-		for _, err := range err.(validator.ValidationErrors) {
-			fmt.Println(err)
-		}
-		return errNotValid
-	}
-	return nil
-}
 
 func dbExists() bool {
 	dbFile := fmt.Sprintf(dbFile, "0600")
@@ -53,10 +38,8 @@ func dbExists() bool {
 
 func isValidWallet(address string) bool {
 	_, _, err := base58.CheckDecode(address)
-	if err != nil {
-		return false
-	}
-	return true
+
+	return err == nil
 }
 
 // Creates a new blockchain
@@ -65,7 +48,7 @@ func CreateBlockchain(address string) *Blockchain {
 		fmt.Println("Blockchain already exists.")
 		os.Exit(1)
 	}
-	if isValidWallet(address) == false {
+	if !isValidWallet(address) {
 		fmt.Println("Use correct wallet")
 		os.Exit(1)
 	}
@@ -104,7 +87,7 @@ func CreateBlockchain(address string) *Blockchain {
 
 // Get All Blockchains
 func GetBlockchain() *Blockchain {
-	if dbExists() == false {
+	if !dbExists() {
 		fmt.Println("There's no blockchain yet. Create one first.")
 		os.Exit(1)
 	}
@@ -135,7 +118,7 @@ func (bc *Blockchain) AddBlock(transactions []*Transaction) {
 	var lastHash []byte
 
 	for _, tx := range transactions {
-		if bc.VerifyTransaction(tx) != true {
+		if !bc.VerifyTransaction(tx) {
 			log.Panic("!!Invalid transaction!!")
 		}
 	}
@@ -228,7 +211,7 @@ func (bc *Blockchain) FindUnspentTxs(publicKeyHash []byte) []*Transaction {
 				}
 			}
 			
-			if tx.IsCoinbase() == false {
+			if !tx.IsCoinbase() {
 				for _, in := range tx.Vin {
 					if in.Unlock(publicKeyHash) {
 						inTxID := hex.EncodeToString(in.Txid)
@@ -294,7 +277,7 @@ func (bc *Blockchain) FindAllUTXOs() map[string][]TXOutput {
 				UTXO[txID] = append(UTXO[txID], out)
 			}
 
-			if tx.IsCoinbase() == false {
+			if !tx.IsCoinbase() {
 				for _, in := range tx.Vin {
 					inTxID := hex.EncodeToString(in.Txid)
 					spentTXOs[inTxID] = append(spentTXOs[inTxID], in.TxoutIdx)
@@ -316,7 +299,7 @@ func (bc *Blockchain) GetTransaction(id []byte) (Transaction, error) {
 	for {
 		block := bcI.getNextBlock()
 		for _, tx := range block.Transactions {
-			if bytes.Compare(tx.ID, id) == 0 {
+			if bytes.Equal(tx.ID, id) {
 					return *tx, nil
 			}
 		}
