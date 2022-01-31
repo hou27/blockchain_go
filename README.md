@@ -19,10 +19,10 @@ How to use:
   startnode -minenode ADDRESS - Start a node with NODE_ID. If there is a minenode flag, that node will be minenode
 ```
 
-- [Proof-of-Work](https://hou27.tistory.com/6)
-- [persistence-and-cli](https://hou27.tistory.com/7)
-- [Transactions](https://hou27.tistory.com/8)
-- [Addresses](https://hou27.tistory.com/9)
+- [Proof-of-Work](https://hou27.tistory.com/entry/Go로-만드는-블록체인-part-2-Proof-of-Work)
+- [persistence-and-cli](https://hou27.tistory.com/entry/Go로-만드는-블록체인-part-3-Persistence)
+- [Transactions](https://hou27.tistory.com/entry/Go로-만드는-블록체인-part-4-Transactions)
+- [Addresses](https://hou27.tistory.com/entry/Go로-만드는-블록체인-part-5-Wallet)
 - UTXO Set
 - Merkle Tree
 - P2P Network
