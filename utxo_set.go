@@ -53,16 +53,19 @@ func (u UTXOSet) Build() {
 		for txID, outs := range UTXO {
 			key, err := hex.DecodeString(txID)
 			if err != nil {
-				log.Panic(err)
+				return err
 			}
 			err = b.Put(key, SerializeTxs(outs))
 			if err != nil {
-				log.Panic(err)
+				return err
 			}
 		}
 
 		return nil
 	})
+	if err != nil {
+		log.Panic(err)
+	}
 }
 
 // Finds UTXO in chainstate
@@ -101,7 +104,7 @@ func (u UTXOSet) Update(block *Block) {
 		b := tx.Bucket([]byte(utxoBucket))
 
 		for _, tx := range block.Transactions {
-			if tx.IsCoinbase() == false {
+			if !tx.IsCoinbase() {
 				// Remove used UTXO
 				for _, vin := range tx.Vin {
 					var newOuts []TXOutput
@@ -131,9 +134,7 @@ func (u UTXOSet) Update(block *Block) {
 
 			// Add new UTXO
 			var newOuts []TXOutput
-			for _, out := range tx.Vout {
-				newOuts = append(newOuts, out)
-			}
+			newOuts = append(newOuts, tx.Vout...)
 
 			err := b.Put(tx.ID, SerializeTxs(newOuts))
 			if err != nil {

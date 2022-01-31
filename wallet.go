@@ -7,7 +7,6 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/gob"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -66,7 +65,7 @@ func NewWallet() *Wallet {
 // CreateWallet adds a Wallet to Wallets
 func (ws *Wallets) CreateWallet() string {
 	wallet := NewWallet()
-	address := fmt.Sprintf("%s", wallet.GetAddress())
+	address := wallet.GetAddress()
 
 	ws.Wallets[address] = wallet
 
@@ -135,8 +134,6 @@ func (ws Wallets) GetWallet(address string) Wallet {
 
 func IsValidWallet(address string) bool {
 	_, _, err := base58.CheckDecode(address)
-	if err != nil {
-		return false
-	}
-	return true
+	
+	return err == nil
 }

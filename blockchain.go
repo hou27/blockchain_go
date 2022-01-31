@@ -10,7 +10,6 @@ import (
 	"os"
 
 	"github.com/boltdb/bolt"
-	"github.com/go-playground/validator"
 )
 
 type Blockchain struct {
@@ -26,20 +25,6 @@ type BlockchainIterator struct {
 const dbFile = "houchain_%s.db"
 
 var Bc *Blockchain
-var errNotValid = errors.New("Can't add this block")
-
-func (bc *Blockchain) validateStructure(newBlock Block) error {
-	validate := validator.New()
-
-	err := validate.Struct(newBlock)
-	if err != nil {
-		for _, err := range err.(validator.ValidationErrors) {
-			fmt.Println(err)
-		}
-		return errNotValid
-	}
-	return nil
-}
 
 func dbExists() bool {
 	dbFile := fmt.Sprintf(dbFile, "0600")
@@ -92,7 +77,7 @@ func CreateBlockchain(address string) *Blockchain {
 
 // Get All Blockchains
 func GetBlockchain() *Blockchain {
-	if dbExists() == false {
+	if !dbExists() {
 		fmt.Println("There's no blockchain yet. Create one first.")
 		os.Exit(1)
 	}
@@ -123,7 +108,7 @@ func (bc *Blockchain) AddBlock(transactions []*Transaction) *Block {
 	var lastHash []byte
 
 	for _, tx := range transactions {
-		if bc.VerifyTransaction(tx) != true {
+		if !bc.VerifyTransaction(tx) {
 			log.Panic("!!Invalid transaction!!")
 		}
 	}
@@ -214,7 +199,7 @@ func (bc *Blockchain) FindAllUTXOs() map[string][]TXOutput {
 				UTXO[txID] = append(UTXO[txID], out)
 			}
 
-			if tx.IsCoinbase() == false {
+			if !tx.IsCoinbase() {
 				for _, in := range tx.Vin {
 					inTxID := hex.EncodeToString(in.Txid)
 					spentTXOs[inTxID] = append(spentTXOs[inTxID], in.TxoutIdx)
@@ -236,7 +221,7 @@ func (bc *Blockchain) GetTransaction(id []byte) (Transaction, error) {
 	for {
 		block := bcI.getNextBlock()
 		for _, tx := range block.Transactions {
-			if bytes.Compare(tx.ID, id) == 0 {
+			if bytes.Equal(tx.ID, id) {
 					return *tx, nil
 			}
 		}
@@ -249,13 +234,17 @@ func (bc *Blockchain) GetTransaction(id []byte) (Transaction, error) {
 
 // Signs inputs of a Transaction
 func (bc *Blockchain) SignTransaction(tx *Transaction, privKey ecdsa.PrivateKey) {
+	prevTXs := make(map[string]Transaction)
+
 	for _, vin := range tx.Vin {
 		prevTX, err := bc.GetTransaction(vin.Txid)
 		if err != nil {
 			log.Panic(err)
 		}
-		tx.Sign(privKey, &prevTX)
+		prevTXs[hex.EncodeToString(prevTX.ID)] = prevTX
 	}
+
+	tx.Sign(privKey, prevTXs)
 }
 
 // Verifies transaction input signatures
@@ -264,15 +253,15 @@ func (bc *Blockchain) VerifyTransaction(tx *Transaction) bool {
 		return true
 	}
 
-	var isVerified bool
+	prevTXs := make(map[string]Transaction)
 
 	for _, vin := range tx.Vin {
 		prevTX, err := bc.GetTransaction(vin.Txid)
 		if err != nil {
 			log.Panic(err)
 		}
-		isVerified = tx.Verify(&prevTX)
+		prevTXs[hex.EncodeToString(prevTX.ID)] = prevTX
 	}
 
-	return isVerified
+	return tx.Verify(prevTXs)
 }

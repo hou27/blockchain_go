@@ -10,9 +10,7 @@ import (
 	"github.com/btcsuite/btcutil/base58"
 )
 
-type Cli struct {
-	bc *Blockchain
-}
+type Cli struct {}
 
 // Run CLI
 func (cli *Cli) Active() {
@@ -119,7 +117,7 @@ func (cli *Cli) send(from, to string, amount int) {
 }
 
 func (cli *Cli) createBlockchain(address string) {
-	if IsValidWallet(address) == false {
+	if !IsValidWallet(address) {
 		fmt.Println("Use correct wallet")
 		os.Exit(1)
 	}

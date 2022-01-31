@@ -18,9 +18,4 @@ How to use:
   showaddresses - Show all addresses
 ```
 
-- Proof-of-Work
-- persistence-and-cli
-- Transactions
-- Addresses
 - UTXO Set
-- Merkle Tree
