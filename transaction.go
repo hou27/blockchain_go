@@ -8,6 +8,7 @@ import (
 	"crypto/sha256"
 	"encoding/gob"
 	"encoding/hex"
+	"fmt"
 	"log"
 	"math/big"
 
@@ -87,9 +88,20 @@ func NewTXOutput(value int, address string) *TXOutput {
 
 // Creates a new coinbase transaction
 func NewCoinbaseTX(to, data string) *Transaction {
+	if data == "Mining reward" {
+		b := make([]byte, 10)
+		_, err := rand.Read(b)
+		if err != nil {
+			log.Panic(err)
+		}
+
+		data = fmt.Sprintf("%x", b)
+	}
+
 	txin := TXInput{[]byte{}, -1, &ScriptSig{nil, []byte(data)}}
 	txout := *NewTXOutput(subsidy, to)
 	tx := Transaction{nil, []TXInput{txin}, []TXOutput{txout}}
+	tx.SetID()
 
 	return &tx
 }
@@ -156,24 +168,24 @@ func (tx *Transaction) AbbreviatedCopy() Transaction {
 }
 
 // Signs each input of a Transaction
-func (tx *Transaction) Sign(privKey ecdsa.PrivateKey, prevTx *Transaction) {
+func (tx *Transaction) Sign(privKey ecdsa.PrivateKey, prevTXs map[string]Transaction) {
 	if tx.IsCoinbase() {
 		return
 	}
 
 	for _, vin := range tx.Vin {
-		if !bytes.Equal(vin.Txid, prevTx.ID) {
-			log.Panic("It's not the previous Transaction.")
+		if prevTXs[hex.EncodeToString(vin.Txid)].ID == nil {
+			log.Panic("Error with Previous transaction")
 		}
 	}
 
 	abbreviatedTx := tx.AbbreviatedCopy()
 
 	for inId, vin := range abbreviatedTx.Vin {
+		prevTx := prevTXs[hex.EncodeToString(vin.Txid)]
+
 		abbreviatedTx.Vin[inId].ScriptSig = &ScriptSig{}
 		abbreviatedTx.Vin[inId].ScriptSig.PublicKey = prevTx.Vout[vin.TxoutIdx].ScriptPubKey
-		abbreviatedTx.SetID()
-		abbreviatedTx.Vin[inId].ScriptSig.PublicKey = nil
 
 		// Use ECDSA(not RSA)
 		r, s, err := ecdsa.Sign(rand.Reader, &privKey, abbreviatedTx.ID)
@@ -183,29 +195,30 @@ func (tx *Transaction) Sign(privKey ecdsa.PrivateKey, prevTx *Transaction) {
 		signature := append(r.Bytes(), s.Bytes()...)
 
 		tx.Vin[inId].ScriptSig.Signature = signature
+		abbreviatedTx.Vin[inId].ScriptSig.PublicKey = nil
 	}
 }
 
 // Verifies signatures of Transaction inputs
-func (tx *Transaction) Verify(prevTx *Transaction) bool {
+func (tx *Transaction) Verify(prevTXs map[string]Transaction) bool {
 	if tx.IsCoinbase() {
 		return true
 	}
 
 	for _, vin := range tx.Vin {
-		if !bytes.Equal(vin.Txid, prevTx.ID) {
-			log.Panic("It's not the previous Transaction.")
+		if prevTXs[hex.EncodeToString(vin.Txid)].ID == nil {
+			log.Panic("Error with Previous transaction")
 		}
 	}
 
 	abbreviatedTx := tx.AbbreviatedCopy()
-	curve := elliptic.P256() // 키 쌍을 생성할 때 사용된 것과 동일한 곡선
+	curve := elliptic.P256() // The same curve used to generate key pairs.
 
 	for inId, vin := range tx.Vin {
+		prevTx := prevTXs[hex.EncodeToString(vin.Txid)]
+
 		abbreviatedTx.Vin[inId].ScriptSig = &ScriptSig{}
 		abbreviatedTx.Vin[inId].ScriptSig.PublicKey = prevTx.Vout[vin.TxoutIdx].ScriptPubKey
-		abbreviatedTx.SetID()
-		abbreviatedTx.Vin[inId].ScriptSig.PublicKey = nil
 
 		sigLen := len(vin.ScriptSig.Signature)
 		keyLen := len(vin.ScriptSig.PublicKey)
@@ -216,7 +229,7 @@ func (tx *Transaction) Verify(prevTx *Transaction) bool {
 		// Signature is a pair of numbers.
 		r.SetBytes(vin.ScriptSig.Signature[:(sigLen / 2)])
 		s.SetBytes(vin.ScriptSig.Signature[(sigLen / 2):])
-		
+
 		// PublicKey is a pair of coordinates.
 		x.SetBytes(vin.ScriptSig.PublicKey[:(keyLen / 2)])
 		y.SetBytes(vin.ScriptSig.PublicKey[(keyLen / 2):])
@@ -225,6 +238,7 @@ func (tx *Transaction) Verify(prevTx *Transaction) bool {
 		if !ecdsa.Verify(rawPublicKey, abbreviatedTx.ID, &r, &s) {
 			return false
 		}
+		abbreviatedTx.Vin[inId].ScriptSig.PublicKey = nil
 	}
 	return true
 }
