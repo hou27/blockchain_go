@@ -237,7 +237,7 @@ func (tx *Transaction) Verify(prevTXs map[string]Transaction) bool {
 		x.SetBytes(vin.ScriptSig.PublicKey[:(keyLen / 2)])
 		y.SetBytes(vin.ScriptSig.PublicKey[(keyLen / 2):])
 
-		rawPublicKey := &ecdsa.PublicKey{curve, &x, &y}
+		rawPublicKey := &ecdsa.PublicKey{Curve: curve, X: &x, Y: &y}
 		if !ecdsa.Verify(rawPublicKey, abbreviatedTx.ID, &r, &s) {
 			return false
 		}
