@@ -19,10 +19,4 @@ How to use:
   startnode -minenode ADDRESS - Start a node with NODE_ID. If there is a minenode flag, that node will be minenode
 ```
 
-- Proof-of-Work
-- persistence-and-cli
-- Transactions
-- Addresses
-- UTXO Set
-- Merkle Tree
 - P2P Network
