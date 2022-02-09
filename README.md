@@ -25,4 +25,4 @@ How to use:
 - [Addresses](https://hou27.tistory.com/entry/Go로-만드는-블록체인-part-5-Wallet)
 - [UTXO Set](https://hou27.tistory.com/entry/Go로-만드는-블록체인-part-6-UTXO-집합)
 - [Merkle Tree](https://hou27.tistory.com/entry/Go로-만드는-블록체인-part-7-Merkle-Tree)
-- P2P Network
+- [P2P Network](https://hou27.tistory.com/entry/Go로-만드는-블록체인-part-8-Network)
