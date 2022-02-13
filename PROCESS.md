@@ -1,6 +1,6 @@
 # Scenario
 
-| NOED_ID |            3000(Full Node)            |                               3001                                |           3002(Mine Node)            |
+| NODE_ID |            3000(Full Node)            |                               3001                                |           3002(Mine Node)            |
 | :-----: | :-----------------------------------: | :---------------------------------------------------------------: | :----------------------------------: |
 |    1    |           createblockchain            |                         createblockchain                          |           createblockchain           |
 |    2    |             send 3 coins              |                                 -                                 |                  -                   |
